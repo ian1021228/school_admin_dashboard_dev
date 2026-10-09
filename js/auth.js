@@ -1,0 +1,180 @@
+// 身分認證與權限控制模組 (RBAC)
+import { 
+    auth, 
+    googleProvider, 
+    signInWithPopup, 
+    signOut, 
+    onAuthStateChanged,
+    getSchoolTenants,
+    saveSchoolTenant
+} from './firebase.js';
+import { SUPER_ADMIN_EMAIL, DEFAULT_SCHOOL } from './constants.js';
+import { showToast, triggerHaptic } from './utils.js';
+
+export const authState = {
+    currentUser: null,       // Firebase User 或 學校管理員物件
+    role: null,              // 'super_admin' | 'school_admin'
+    currentSchool: null,     // 目前管理的學校租戶物件
+    isImpersonating: false   // 是否由最高管理端穿透巡查
+};
+
+let authCallback = null;
+
+// 監聽 Firebase 驗證狀態
+export function initAuthListener(onStateChanged) {
+    authCallback = onStateChanged;
+    onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+            if (firebaseUser.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+                authState.currentUser = firebaseUser;
+                authState.role = 'super_admin';
+                // 預設選中第一所學校作為工作區
+                const schools = await getSchoolTenants();
+                authState.currentSchool = schools[0] || DEFAULT_SCHOOL;
+                authState.isImpersonating = false;
+                if (authCallback) authCallback(authState);
+                return;
+            } else {
+                // 非最高管理員 Google 帳號，強制拒絕登入
+                await signOut(auth);
+                showToast(`存取拒絕：僅授權最高管理員 (${SUPER_ADMIN_EMAIL}) 登入！`, 'error', 5000);
+                authState.currentUser = null;
+                authState.role = null;
+                authState.currentSchool = null;
+                if (authCallback) authCallback(authState);
+                return;
+            }
+        } else {
+            // 檢查本地是否有學校管理員 session
+            const savedSession = localStorage.getItem('school_admin_session');
+            if (savedSession) {
+                try {
+                    const parsed = JSON.parse(savedSession);
+                    authState.currentUser = parsed.user;
+                    authState.role = 'school_admin';
+                    authState.currentSchool = parsed.school;
+                    authState.isImpersonating = false;
+                    if (authCallback) authCallback(authState);
+                    return;
+                } catch (e) {
+                    localStorage.removeItem('school_admin_session');
+                }
+            }
+            authState.currentUser = null;
+            authState.role = null;
+            authState.currentSchool = null;
+            if (authCallback) authCallback(authState);
+        }
+    });
+}
+
+// 最高管理端：強制 Google 登入 (ianw.solar@gmail.com)
+export async function loginWithGoogle() {
+    triggerHaptic('medium');
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        if (user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+            await signOut(auth);
+            showToast(`存取拒絕：${user.email} 不是最高系統管理員 (${SUPER_ADMIN_EMAIL})`, 'error', 6000);
+            return false;
+        }
+        showToast(`歡迎最高管理員登入：${user.email}`, 'success');
+        return true;
+    } catch (error) {
+        console.error("Google 登入失敗:", error);
+        showToast(`Google 登入失敗：${error.message}`, 'error');
+        return false;
+    }
+}
+
+// 學校管理端：帳號密碼登入
+export async function loginWithSchoolCredentials(username, password) {
+    triggerHaptic('medium');
+    const cleanUser = (username || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    // 支援測試用標準帳密 antigravity / 123456
+    if (cleanUser === 'antigravity' && (cleanPass === '123456' || cleanPass === 'password123')) {
+        const schools = await getSchoolTenants();
+        const targetSchool = schools.find(s => s.id === 'shs') || DEFAULT_SCHOOL;
+        authState.currentUser = { username: 'antigravity', displayName: '七賢國中 管理處' };
+        authState.role = 'school_admin';
+        authState.currentSchool = targetSchool;
+        authState.isImpersonating = false;
+
+        localStorage.setItem('school_admin_session', JSON.stringify({
+            user: authState.currentUser,
+            school: authState.currentSchool
+        }));
+
+        showToast(`學校管理端登入成功：${targetSchool.name}`, 'success');
+        if (authCallback) authCallback(authState);
+        return true;
+    }
+
+    // 比對各校註冊的租戶帳號
+    const schools = await getSchoolTenants();
+    const matched = schools.find(s => 
+        (s.adminUsername && s.adminUsername.toLowerCase() === cleanUser) &&
+        (s.adminPassword === cleanPass)
+    );
+
+    if (matched) {
+        if (matched.status === 'suspended') {
+            showToast(`該學校系統已被最高管理端停用，請聯繫 ${SUPER_ADMIN_EMAIL}`, 'error');
+            return false;
+        }
+
+        authState.currentUser = { username: matched.adminUsername, displayName: `${matched.name} 管理處` };
+        authState.role = 'school_admin';
+        authState.currentSchool = matched;
+        authState.isImpersonating = false;
+
+        localStorage.setItem('school_admin_session', JSON.stringify({
+            user: authState.currentUser,
+            school: authState.currentSchool
+        }));
+
+        showToast(`學校管理端登入成功：${matched.name}`, 'success');
+        if (authCallback) authCallback(authState);
+        return true;
+    }
+
+    showToast('帳號或密碼錯誤，請重新確認！', 'error');
+    return false;
+}
+
+// 最高管理端穿透進入特定學校
+export function impersonateSchool(schoolObj) {
+    if (authState.role !== 'super_admin' && !authState.isImpersonating) {
+        showToast('僅限最高管理員可執行穿透抽查！', 'error');
+        return;
+    }
+    authState.currentSchool = schoolObj;
+    authState.isImpersonating = true;
+    showToast(`已切換穿透檢視：${schoolObj.name}`, 'info');
+    if (authCallback) authCallback(authState);
+}
+
+// 結束穿透抽查，返回最高管理端總覽
+export function exitImpersonation() {
+    authState.isImpersonating = false;
+    showToast('已返回最高管理端總覽', 'info');
+    if (authCallback) authCallback(authState);
+}
+
+// 登出
+export async function logout() {
+    triggerHaptic('light');
+    localStorage.removeItem('school_admin_session');
+    if (auth.currentUser) {
+        await signOut(auth);
+    }
+    authState.currentUser = null;
+    authState.role = null;
+    authState.currentSchool = null;
+    authState.isImpersonating = false;
+    showToast('已安全登出', 'info');
+    if (authCallback) authCallback(authState);
+}

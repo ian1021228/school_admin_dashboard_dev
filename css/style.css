@@ -1,0 +1,69 @@
+/* 全域樣式與字體定義 */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+:root {
+  --app-font: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--app-font);
+  background-color: #f8fafc;
+  color: #1e293b;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 玻璃質感與陰影微調 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 自訂捲軸 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 觸控 active 動畫 */
+button:active {
+  transform: scale(0.98);
+}
+
+/* 安全防偽印章微旋轉動畫 */
+@keyframes stamp-pop {
+  0% { transform: scale(1.5) rotate(-15deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+}
+
+.stamp-animated {
+  animation: stamp-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 嚴格響應式導航隔離 */
+@media (max-width: 767px) {
+  #header-nav-tabs {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  #mobile-nav-tabs {
+    display: none !important;
+  }
+}
