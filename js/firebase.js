@@ -120,6 +120,9 @@ export async function saveSchoolClass(classData) {
                 missingSeats: classData.missingSeats || [],
                 parentAccessCode: classData.parentAccessCode || '',
                 parentPassword: classData.parentPassword || '',
+                isReadOnly: Boolean(classData.isReadOnly),
+                studentPins: classData.studentPins || {},
+                studentAccounts: classData.studentAccounts || [],
                 updatedAt: new Date().toISOString()
             }, { merge: true });
         } catch (e) {
@@ -193,7 +196,7 @@ export async function saveAdminInspection(inspectionData) {
 }
 
 // ==========================================
-// 全校校安廣播 (Campus Safety Announcements)
+// 全校全校廣播 (Campus Safety Announcements)
 // ==========================================
 export async function getCampusAnnouncements(schoolId) {
     try {
@@ -205,7 +208,7 @@ export async function getCampusAnnouncements(schoolId) {
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     } catch (e) {
-        console.warn("取得校安廣播失敗", e);
+        console.warn("取得全校廣播失敗", e);
         return [];
     }
 }
