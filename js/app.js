@@ -1,9 +1,10 @@
-// 學校與最高行政管理端主程式 (School Admin App Entry)
+// 學校與系統行政管理端主程式 (School Admin App Entry)
 import { 
     authState, 
     initAuthListener, 
     loginWithGoogle, 
     loginWithSchoolCredentials, 
+    loginAsSuperAdminWithCredentials,
     logout, 
     impersonateSchool, 
     exitImpersonation 
@@ -63,18 +64,18 @@ function updateUIForAuthState(state) {
     headerRoleBadge.classList.remove('hidden');
 
     if (state.role === 'super_admin' && !state.isImpersonating) {
-        // 最高管理端檢視
-        headerSchoolName.textContent = '最高管理中樞 (ianw.solar@gmail.com)';
-        headerRoleBadge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i>最高管理員';
+        // 系統管理端檢視
+        headerSchoolName.textContent = '系統管理中樞 (System Admin)';
+        headerRoleBadge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i>系統管理員';
         headerRoleBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200';
         navSuperAdminBtn.classList.remove('hidden');
         mobileSuperTabBtn.classList.remove('hidden');
         impersonationBar.classList.add('hidden');
     } else {
-        // 學校管理端檢視 (或最高管理員穿透檢視)
+        // 學校管理端檢視 (或系統管理員切換檢視)
         headerSchoolName.textContent = state.currentSchool?.name || '學校管理端';
         headerRoleBadge.innerHTML = state.isImpersonating 
-            ? '<i class="fa-solid fa-crown mr-1"></i>穿透檢視' 
+            ? '<i class="fa-solid fa-crown mr-1"></i>學校管理模式' 
             : '<i class="fa-solid fa-school mr-1"></i>學校端';
         headerRoleBadge.className = state.isImpersonating 
             ? 'text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200'
@@ -162,6 +163,17 @@ btnGoogleLogin.addEventListener('click', async () => {
     await loginWithGoogle();
 });
 
+// 系統管理員登入表單
+const superLoginForm = document.getElementById('super-login-form');
+if (superLoginForm) {
+    superLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = document.getElementById('super-login-user').value;
+        const pass = document.getElementById('super-login-pass').value;
+        await loginAsSuperAdminWithCredentials(user, pass);
+    });
+}
+
 // 學校管理員登入表單
 schoolLoginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -176,7 +188,7 @@ headerLogoutBtn.addEventListener('click', async () => {
     await logout();
 });
 
-// 退出穿透巡查按鈕
+// 退出學校管理模式按鈕
 exitImpersonationBtn.addEventListener('click', () => {
     exitImpersonation();
     updateUIForAuthState(authState);
@@ -184,7 +196,7 @@ exitImpersonationBtn.addEventListener('click', () => {
 });
 
 // ==============================================================
-// 最高管理端學校租戶管理邏輯
+// 系統管理員學校租戶管理邏輯
 // ==============================================================
 const superSchoolTableBody = document.getElementById('super-school-table-body');
 const superSchoolCount = document.getElementById('super-school-count');
@@ -251,9 +263,9 @@ async function renderSuperAdminSchoolList() {
             </td>
             <td class="py-3.5 px-4 text-center">
                 <div class="flex items-center justify-center gap-1.5">
-                    <button class="impersonate-btn px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer" title="穿透巡查此校管理端">
+                    <button class="impersonate-btn px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer" title="進入此校管理端">
                         <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
-                        <span>穿透巡查</span>
+                        <span>管理後台</span>
                     </button>
                     <button class="delete-sch-btn p-1.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors" title="刪除學校">
                         <i class="fa-solid fa-trash-can text-xs"></i>
@@ -262,7 +274,7 @@ async function renderSuperAdminSchoolList() {
             </td>
         `;
 
-        // 穿透巡查
+        // 進入此校管理端
         tr.querySelector('.impersonate-btn').addEventListener('click', () => {
             impersonateSchool(sch);
             updateUIForAuthState(authState);

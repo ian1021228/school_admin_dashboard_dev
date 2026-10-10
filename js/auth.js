@@ -15,7 +15,7 @@ export const authState = {
     currentUser: null,       // Firebase User 或 學校管理員物件
     role: null,              // 'super_admin' | 'school_admin'
     currentSchool: null,     // 目前管理的學校租戶物件
-    isImpersonating: false   // 是否由最高管理端穿透巡查
+    isImpersonating: false   // 是否由系統管理員切換管理學校
 };
 
 let authCallback = null;
@@ -35,9 +35,9 @@ export function initAuthListener(onStateChanged) {
                 if (authCallback) authCallback(authState);
                 return;
             } else {
-                // 非最高管理員 Google 帳號，強制拒絕登入
+                // 非系統管理員 Google 帳號，強制拒絕登入
                 await signOut(auth);
-                showToast(`存取拒絕：僅授權最高管理員 (${SUPER_ADMIN_EMAIL}) 登入！`, 'error', 5000);
+                showToast(`存取拒絕：僅授權系統管理員 (${SUPER_ADMIN_EMAIL}) 登入！`, 'error', 5000);
                 authState.currentUser = null;
                 authState.role = null;
                 authState.currentSchool = null;
@@ -45,11 +45,20 @@ export function initAuthListener(onStateChanged) {
                 return;
             }
         } else {
-            // 檢查本地是否有學校管理員 session
+            // 檢查本地是否有管理員 session
             const savedSession = localStorage.getItem('school_admin_session');
             if (savedSession) {
                 try {
                     const parsed = JSON.parse(savedSession);
+                    if (parsed.role === 'super_admin') {
+                        authState.currentUser = parsed.user;
+                        authState.role = 'super_admin';
+                        const schools = await getSchoolTenants();
+                        authState.currentSchool = parsed.school || schools[0] || DEFAULT_SCHOOL;
+                        authState.isImpersonating = false;
+                        if (authCallback) authCallback(authState);
+                        return;
+                    }
                     // 若舊 session 保留了舊學校名稱或為測試帳號，自動更新為測試國中
                     if (parsed.user?.username === 'antigravity' || parsed.school?.id === 'shs' || parsed.school?.name?.includes('七賢')) {
                         if (parsed.school) parsed.school.name = '測試國中';
@@ -74,7 +83,7 @@ export function initAuthListener(onStateChanged) {
     });
 }
 
-// 最高管理端：強制 Google 登入 (ianw.solar@gmail.com)
+// 系統管理員：強制 Google 登入 (ianw.solar@gmail.com)
 export async function loginWithGoogle() {
     triggerHaptic('medium');
     try {
@@ -82,10 +91,10 @@ export async function loginWithGoogle() {
         const user = result.user;
         if (user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
             await signOut(auth);
-            showToast(`存取拒絕：${user.email} 不是最高系統管理員 (${SUPER_ADMIN_EMAIL})`, 'error', 6000);
+            showToast(`存取拒絕：${user.email} 不是系統管理員 (${SUPER_ADMIN_EMAIL})`, 'error', 6000);
             return false;
         }
-        showToast(`歡迎最高管理員登入：${user.email}`, 'success');
+        showToast(`歡迎系統管理員登入：${user.email}`, 'success');
         return true;
     } catch (error) {
         console.error("Google 登入失敗:", error);
@@ -94,11 +103,49 @@ export async function loginWithGoogle() {
     }
 }
 
+// 系統管理員：帳號密碼登入 (ianantigravity / ianistall188 或測試用 antigravity / 123456)
+export async function loginAsSuperAdminWithCredentials(username, password) {
+    triggerHaptic('medium');
+    const cleanUser = (username || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if ((cleanUser === 'ianantigravity' && cleanPass === 'ianistall188') ||
+        (cleanUser === 'antigravity' && (cleanPass === '123456' || cleanPass === 'password123'))) {
+        const schools = await getSchoolTenants();
+        authState.currentUser = {
+            username: cleanUser,
+            displayName: '系統管理員 (System Admin)',
+            isSuperAdmin: true
+        };
+        authState.role = 'super_admin';
+        authState.currentSchool = schools[0] || DEFAULT_SCHOOL;
+        authState.isImpersonating = false;
+
+        localStorage.setItem('school_admin_session', JSON.stringify({
+            user: authState.currentUser,
+            role: 'super_admin',
+            school: authState.currentSchool
+        }));
+
+        showToast('系統管理員登入成功！', 'success');
+        if (authCallback) authCallback(authState);
+        return true;
+    }
+
+    showToast('系統管理員帳號或密碼錯誤！', 'error');
+    return false;
+}
+
 // 學校管理端：帳號密碼登入
 export async function loginWithSchoolCredentials(username, password) {
     triggerHaptic('medium');
     const cleanUser = (username || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
+
+    // 若輸入系統管理員帳密，自動以系統管理員身分登入
+    if (cleanUser === 'ianantigravity' && cleanPass === 'ianistall188') {
+        return await loginAsSuperAdminWithCredentials(cleanUser, cleanPass);
+    }
 
     // 支援測試用標準帳密 antigravity / 123456
     if (cleanUser === 'antigravity' && (cleanPass === '123456' || cleanPass === 'password123')) {
@@ -112,6 +159,7 @@ export async function loginWithSchoolCredentials(username, password) {
 
         localStorage.setItem('school_admin_session', JSON.stringify({
             user: authState.currentUser,
+            role: 'school_admin',
             school: authState.currentSchool
         }));
 
@@ -129,7 +177,7 @@ export async function loginWithSchoolCredentials(username, password) {
 
     if (matched) {
         if (matched.status === 'suspended') {
-            showToast(`該學校系統已被最高管理端停用，請聯繫 ${SUPER_ADMIN_EMAIL}`, 'error');
+            showToast(`該學校系統已被系統管理員停用，請聯繫 ${SUPER_ADMIN_EMAIL}`, 'error');
             return false;
         }
 
@@ -140,6 +188,7 @@ export async function loginWithSchoolCredentials(username, password) {
 
         localStorage.setItem('school_admin_session', JSON.stringify({
             user: authState.currentUser,
+            role: 'school_admin',
             school: authState.currentSchool
         }));
 
@@ -152,22 +201,22 @@ export async function loginWithSchoolCredentials(username, password) {
     return false;
 }
 
-// 最高管理端穿透進入特定學校
+// 系統管理員進入特定學校管理後台
 export function impersonateSchool(schoolObj) {
     if (authState.role !== 'super_admin' && !authState.isImpersonating) {
-        showToast('僅限最高管理員可執行穿透抽查！', 'error');
+        showToast('僅限系統管理員可切換學校管理！', 'error');
         return;
     }
     authState.currentSchool = schoolObj;
     authState.isImpersonating = true;
-    showToast(`已切換穿透檢視：${schoolObj.name}`, 'info');
+    showToast(`已切換至學校管理：${schoolObj.name}`, 'info');
     if (authCallback) authCallback(authState);
 }
 
-// 結束穿透抽查，返回最高管理端總覽
+// 結束學校管理，返回系統管理員總覽
 export function exitImpersonation() {
     authState.isImpersonating = false;
-    showToast('已返回最高管理端總覽', 'info');
+    showToast('已返回系統管理員總覽', 'info');
     if (authCallback) authCallback(authState);
 }
 

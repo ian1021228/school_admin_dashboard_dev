@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>班級經營系統 — 學校與最高行政管理端</title>
+    <title>班級經營系統 — 學校管理端與系統管理員</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -65,17 +65,17 @@
                     <i class="fa-solid fa-book-open-reader mr-1.5 text-teal-600"></i>各班聯絡簿與點收
                 </button>
                 <button id="nav-super-admin-btn" class="nav-tab-btn hidden px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-purple-700 hover:bg-purple-100/80 bg-purple-50 border border-purple-200" data-tab="super_admin">
-                    <i class="fa-solid fa-crown mr-1.5 text-purple-600"></i>最高管理
+                    <i class="fa-solid fa-crown mr-1.5 text-purple-600"></i>系統管理員
                 </button>
             </nav>
 
             <!-- 右側使用者狀態與操作 -->
             <div class="flex items-center gap-2 shrink-0">
-                <!-- 穿透模式提示與退出按鈕 -->
+                <!-- 管理模式提示與退出按鈕 -->
                 <div id="impersonation-bar" class="hidden items-center gap-2 bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-2xl text-xs font-bold text-purple-900">
                     <i class="fa-solid fa-eye text-purple-600"></i>
-                    <span class="hidden sm:inline">穿透巡查中</span>
-                    <button id="exit-impersonation-btn" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-950 font-black text-[11px] cursor-pointer">返回總管</button>
+                    <span class="hidden sm:inline">學校管理模式中</span>
+                    <button id="exit-impersonation-btn" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-950 font-black text-[11px] cursor-pointer">返回系統管理員</button>
                 </div>
 
                 <!-- 各端切換快捷 -->
@@ -103,7 +103,7 @@
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="broadcast">全校廣播</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="accounts">班級帳密</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="contact_book">聯絡簿點收</button>
-            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-purple-600 whitespace-nowrap" data-tab="super_admin">最高管理</button>
+            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-purple-600 whitespace-nowrap" data-tab="super_admin">系統管理員</button>
         </nav>
     </header>
 
@@ -120,7 +120,7 @@
                     <span>校園智慧行政專用中樞</span>
                 </div>
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                    學校管理與最高行政認證中心
+                    學校管理與系統行政認證中心
                 </h1>
                 <p class="text-sm sm:text-base text-slate-500 max-w-2xl mx-auto font-medium">
                     專為學校教務處、學務處行政人員與最高系統管理員設計。支援 08:00 晨間出缺席大看板、線上行政抽查核章、全校廣播與全校班級帳密統一派發。
@@ -129,35 +129,49 @@
 
             <!-- 兩大登入管道卡片 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 管道 A: 最高管理端 (強制 Google 登入) -->
+                <!-- 管道 A: 系統管理員 (帳密或 Google 授權登入) -->
                 <div class="bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-7 sm:p-8 shadow-xl shadow-purple-950/20 flex flex-col justify-between space-y-6 relative overflow-hidden">
                     <div class="space-y-4 relative z-10">
                         <div class="w-12 h-12 rounded-2xl bg-white/10 text-purple-300 flex items-center justify-center text-2xl border border-white/15">
                             <i class="fa-solid fa-crown"></i>
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">最高層級防護</span>
-                            <h2 class="text-2xl font-black tracking-tight text-white mt-1">最高管理端 (Super Admin)</h2>
+                            <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">系統最高權限</span>
+                            <h2 class="text-2xl font-black tracking-tight text-white mt-1">系統管理員 (System Admin)</h2>
                             <p class="text-xs text-purple-200/80 mt-2 font-medium leading-relaxed">
-                                由系統創作者專屬管理。負責派發各校管理帳號、多校租戶授權、資安防護與全域稽核。
+                                由系統管理員專屬管理。負責派發各校管理帳號、多校租戶授權與系統設定。
                             </p>
                         </div>
 
-                        <div class="p-3.5 rounded-2xl bg-white/10 border border-white/15 text-xs text-purple-200 space-y-1">
-                            <div class="font-bold text-white flex items-center gap-1.5">
-                                <i class="fa-solid fa-lock text-purple-300"></i>
-                                <span>強制 Google OAuth 官方授權</span>
+                        <!-- 系統管理員帳密登入表單 -->
+                        <form id="super-login-form" class="space-y-3 pt-1">
+                            <div>
+                                <label class="block text-xs font-bold text-purple-200 mb-1">系統管理員帳號</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-300 text-xs"></i>
+                                    <input type="text" id="super-login-user" required placeholder="請輸入管理員帳號" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-white/20 text-sm font-bold bg-white/10 text-white placeholder:text-purple-300/60 focus:bg-white/20 outline-none">
+                                </div>
                             </div>
-                            <p class="text-[11px] text-purple-200/80">
-                                系統嚴格驗證唯一最高管理員信箱：<br><code class="text-white font-mono bg-black/30 px-1 py-0.5 rounded">ianw.solar@gmail.com</code>
-                            </p>
-                        </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-purple-200 mb-1">登入密碼</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-300 text-xs"></i>
+                                    <input type="password" id="super-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-white/20 text-sm font-bold bg-white/10 text-white placeholder:text-purple-300/60 focus:bg-white/20 outline-none">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-sm transition-all shadow-md shadow-purple-900/30 flex items-center justify-center gap-2 cursor-pointer mt-1">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                                <span>登入系統管理員中樞</span>
+                            </button>
+                        </form>
                     </div>
 
-                    <div class="relative z-10 pt-2">
-                        <button id="btn-google-login" class="w-full py-3.5 px-5 rounded-2xl bg-white hover:bg-purple-50 text-slate-900 font-black text-sm transition-all shadow-lg shadow-black/20 flex items-center justify-center gap-3 cursor-pointer">
-                            <i class="fa-brands fa-google text-rose-500 text-lg"></i>
-                            <span>使用 Google 帳號授權登入</span>
+                    <div class="relative z-10 pt-1 border-t border-white/15">
+                        <button id="btn-google-login" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center justify-center gap-2.5 cursor-pointer">
+                            <i class="fa-brands fa-google text-rose-400"></i>
+                            <span>或使用 Google 授權帳號登入</span>
                         </button>
                     </div>
                 </div>
@@ -172,7 +186,7 @@
                             <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">學校處室專用</span>
                             <h2 class="text-2xl font-black tracking-tight text-slate-900 mt-1">學校管理端 (School Admin)</h2>
                             <p class="text-xs text-slate-500 mt-2 font-medium leading-relaxed">
-                                使用最高管理端核發之管理帳號登入，管理該校晨間出缺席、行政抽查核章、全校廣播與統一班級帳密派發。
+                                使用系統管理員核發之管理帳號登入，管理該校晨間出缺席、行政抽查核章、全校廣播與統一班級帳密派發。
                             </p>
                         </div>
 
@@ -212,17 +226,17 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- 3. 最高管理端專屬視圖 (Super Admin School Tenant Management)   -->
+        <!-- 3. 系統管理員專屬視圖 (Super Admin School Tenant Management)   -->
         <!-- ============================================================== -->
         <div id="super-admin-view" class="hidden space-y-6">
             <!-- 頂部卡片 -->
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-black">最高統管權限</span>
+                        <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-black">系統管理員權限</span>
                         <h2 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">全台授權學校租戶與管理帳號中樞</h2>
                     </div>
-                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">最高管理員專屬：新增授權學校、派發學校管理員帳號與密碼、一鍵穿透抽查該校學事進度</p>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1">系統管理員專屬：新增授權學校、派發學校管理員帳號與密碼、管理各校後台</p>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -252,7 +266,7 @@
                                 <th class="py-3.5 px-4">管理員帳號</th>
                                 <th class="py-3.5 px-4">管理員密碼</th>
                                 <th class="py-3.5 px-4">狀態</th>
-                                <th class="py-3.5 px-4 text-center">操作/穿透巡查</th>
+                                <th class="py-3.5 px-4 text-center">操作/管理後台</th>
                             </tr>
                         </thead>
                         <tbody id="super-school-table-body" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
@@ -321,7 +335,7 @@
     <footer class="mt-auto bg-white border-t border-slate-200/80 py-6 px-4 text-center">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
             <div class="flex flex-wrap items-center justify-center gap-y-1">
-                <span class="font-bold text-slate-700">班級經營系統 — 學校與最高行政管理端 (測試版 DEV)</span>
+                <span class="font-bold text-slate-700">班級經營系統 — 學校與系統行政管理端 (測試版 DEV)</span>
                 <span class="mx-2 text-slate-300">|</span>
                 <a href="https://ian1021228.github.io/homework_checker3.0_dev/" class="text-indigo-600 hover:underline font-bold">教師端 (DEV)</a>
                 <span class="mx-2 text-slate-300">|</span>

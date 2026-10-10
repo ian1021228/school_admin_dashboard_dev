@@ -34,7 +34,7 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 // ==========================================
-// 學校租戶 (School Tenants - 最高管理端管理)
+// 學校租戶 (School Tenants - 系統管理員管理)
 // 存儲路徑：userProfiles/sys_school_tenants
 // ==========================================
 export async function getSchoolTenants() {
@@ -151,10 +151,13 @@ export async function saveSchoolClass(classData) {
     else list.push(payload);
     localStorage.setItem(localKey, JSON.stringify(list));
 
-    // 寫入雲端 sch_classes_{schoolId}
+    // 寫入雲端 sch_classes_{schoolId} 與 schoolClasses
     try {
         const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', `sch_classes_${classData.schoolId}`);
         await setDoc(docRef, { list, updatedAt: new Date().toISOString() }, { merge: true });
+
+        const scRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
+        await setDoc(scRef, payload, { merge: true });
     } catch (e) {
         console.warn("寫入雲端學校班級提示:", e);
     }
