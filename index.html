@@ -61,6 +61,9 @@
                 <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="accounts">
                     <i class="fa-solid fa-users-gear mr-1.5 text-sky-600"></i>班級與帳密派發
                 </button>
+                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="contact_book">
+                    <i class="fa-solid fa-book-open-reader mr-1.5 text-teal-600"></i>各班聯絡簿與點收
+                </button>
                 <button id="nav-super-admin-btn" class="nav-tab-btn hidden px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-purple-700 hover:bg-purple-100/80 bg-purple-50 border border-purple-200" data-tab="super_admin">
                     <i class="fa-solid fa-crown mr-1.5 text-purple-600"></i>最高管理
                 </button>
@@ -95,11 +98,12 @@
 
         <!-- 行動端導航列 (Mobile Horizontal Tab Bar) -->
         <nav id="mobile-nav-tabs" class="hidden max-md:flex md:!hidden items-center justify-around px-2 py-1.5 border-t border-slate-100 bg-white text-[11px] font-bold overflow-x-auto">
-            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-indigo-600 font-black" data-tab="attendance">晨間出缺席</button>
-            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500" data-tab="inspection">行政核章</button>
-            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500" data-tab="broadcast">全校廣播</button>
-            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500" data-tab="accounts">班級帳密</button>
-            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-purple-600" data-tab="super_admin">最高管理</button>
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-indigo-600 font-black whitespace-nowrap" data-tab="attendance">晨間出缺席</button>
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="inspection">行政核章</button>
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="broadcast">全校廣播</button>
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="accounts">班級帳密</button>
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="contact_book">聯絡簿點收</button>
+            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-purple-600 whitespace-nowrap" data-tab="super_admin">最高管理</button>
         </nav>
     </header>
 

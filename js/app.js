@@ -13,6 +13,7 @@ import { renderAttendanceDashboard } from './attendance.js';
 import { renderInspectionDashboard } from './inspection.js';
 import { renderBroadcastDashboard } from './broadcast.js';
 import { renderAccountsDashboard } from './accounts.js';
+import { renderContactBookDashboard } from './contactBook.js';
 import { showToast, triggerHaptic, generateSecurePassword, escapeHtml } from './utils.js';
 
 let currentTab = 'attendance';
@@ -144,6 +145,8 @@ export async function switchTab(tabKey) {
         await renderBroadcastDashboard(moduleContainer, authState.currentSchool);
     } else if (tabKey === 'accounts') {
         await renderAccountsDashboard(moduleContainer, authState.currentSchool);
+    } else if (tabKey === 'contact_book') {
+        await renderContactBookDashboard(moduleContainer, authState.currentSchool);
     }
 }
 
