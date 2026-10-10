@@ -153,7 +153,7 @@ export async function renderAttendanceDashboard(container, currentSchool) {
         const classes = await getSchoolClasses(currentSchool.id);
         const attendanceRecords = await getMorningAttendance(currentSchool.id, curDate);
 
-        // 若無資料且是七賢國中，自動產生預設的展示班級與出勤資料
+        // 若無資料且是測試國中，自動產生預設的展示班級與出勤資料
         let effectiveClasses = classes;
         if (effectiveClasses.length === 0) {
             effectiveClasses = [

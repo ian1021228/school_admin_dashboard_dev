@@ -50,6 +50,12 @@ export function initAuthListener(onStateChanged) {
             if (savedSession) {
                 try {
                     const parsed = JSON.parse(savedSession);
+                    // 若舊 session 保留了舊學校名稱或為測試帳號，自動更新為測試國中
+                    if (parsed.user?.username === 'antigravity' || parsed.school?.id === 'shs' || parsed.school?.name?.includes('七賢')) {
+                        if (parsed.school) parsed.school.name = '測試國中';
+                        if (parsed.user) parsed.user.displayName = '測試國中 管理處';
+                        localStorage.setItem('school_admin_session', JSON.stringify(parsed));
+                    }
                     authState.currentUser = parsed.user;
                     authState.role = 'school_admin';
                     authState.currentSchool = parsed.school;
@@ -97,8 +103,9 @@ export async function loginWithSchoolCredentials(username, password) {
     // 支援測試用標準帳密 antigravity / 123456
     if (cleanUser === 'antigravity' && (cleanPass === '123456' || cleanPass === 'password123')) {
         const schools = await getSchoolTenants();
-        const targetSchool = schools.find(s => s.id === 'shs') || DEFAULT_SCHOOL;
-        authState.currentUser = { username: 'antigravity', displayName: '七賢國中 管理處' };
+        let targetSchool = schools.find(s => s.id === 'shs' || s.id === 'test_school' || s.name === '測試國中') || DEFAULT_SCHOOL;
+        targetSchool = { ...targetSchool, name: '測試國中' };
+        authState.currentUser = { username: 'antigravity', displayName: '測試國中 管理處' };
         authState.role = 'school_admin';
         authState.currentSchool = targetSchool;
         authState.isImpersonating = false;

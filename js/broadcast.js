@@ -175,7 +175,8 @@ export async function renderBroadcastDashboard(container, currentSchool) {
                 const id = btn.dataset.id;
                 const curActive = btn.dataset.active === 'true';
                 try {
-                    await toggleCampusAnnouncement(id, !curActive);
+                    const targetBc = list.find(b => b.id === id);
+                    await toggleCampusAnnouncement(id, !curActive, targetBc);
                     showToast(`已${curActive ? '停止' : '啟用'}此項廣播推播`, 'info');
                     loadBroadcasts();
                 } catch (e) {

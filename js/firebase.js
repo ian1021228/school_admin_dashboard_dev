@@ -97,15 +97,31 @@ export async function getSchoolClasses(schoolId) {
 
 export async function saveSchoolClass(classData) {
     const docId = `${classData.schoolId}_${classData.classCode}`;
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
     const payload = {
         ...classData,
         id: docId,
         updatedAt: new Date().toISOString()
     };
-    await setDoc(docRef, payload, { merge: true });
 
-    // 同步到 boundAccounts 使得教師端能以此帳密登入並自動載入該班級
+    // 1. 同步儲存至本地快取
+    try {
+        const localKey = `school_classes_${classData.schoolId}`;
+        const cached = JSON.parse(localStorage.getItem(localKey) || '[]');
+        const idx = cached.findIndex(c => c.classCode === classData.classCode);
+        if (idx >= 0) cached[idx] = { ...cached[idx], ...payload };
+        else cached.push(payload);
+        localStorage.setItem(localKey, JSON.stringify(cached));
+    } catch (e) {}
+
+    // 2. 寫入雲端 schoolClasses
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
+        await setDoc(docRef, payload, { merge: true });
+    } catch (e) {
+        console.warn("寫入雲端 schoolClasses 未完成，已維持本地快取:", e);
+    }
+
+    // 3. 同步到 boundAccounts 使得教師端能以此帳密登入並自動載入該班級
     if (classData.teacherUsername && classData.teacherPassword) {
         try {
             const boundRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', classData.teacherUsername.toLowerCase().trim());
@@ -126,7 +142,7 @@ export async function saveSchoolClass(classData) {
                 updatedAt: new Date().toISOString()
             }, { merge: true });
         } catch (e) {
-            console.error("同步至 boundAccounts 失敗:", e);
+            console.warn("同步至 boundAccounts 警告:", e);
         }
     }
 
@@ -135,8 +151,19 @@ export async function saveSchoolClass(classData) {
 
 export async function deleteSchoolClass(schoolId, classCode) {
     const docId = `${schoolId}_${classCode}`;
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
-    await deleteDoc(docRef);
+    try {
+        const localKey = `school_classes_${schoolId}`;
+        const cached = JSON.parse(localStorage.getItem(localKey) || '[]');
+        const filtered = cached.filter(c => c.classCode !== classCode);
+        localStorage.setItem(localKey, JSON.stringify(filtered));
+    } catch (e) {}
+
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
+        await deleteDoc(docRef);
+    } catch (e) {
+        console.warn("雲端刪除未完成，已從本地快取移除:", e);
+    }
 }
 
 // ==========================================
@@ -158,11 +185,15 @@ export async function getMorningAttendance(schoolId, dateStr) {
 
 export async function saveMorningAttendance(record) {
     const docId = `${record.schoolId}_${record.classCode}_${record.date}`;
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'morningAttendance', docId);
-    await setDoc(docRef, {
-        ...record,
-        updatedAt: new Date().toISOString()
-    }, { merge: true });
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'morningAttendance', docId);
+        await setDoc(docRef, {
+            ...record,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    } catch (e) {
+        console.warn("寫入晨間出缺席資料未完成:", e);
+    }
 }
 
 // ==========================================
@@ -185,13 +216,17 @@ export async function getAdminInspections(schoolId) {
 
 export async function saveAdminInspection(inspectionData) {
     const docId = inspectionData.id || `insp_${Date.now()}`;
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'adminInspections', docId);
     const payload = {
         ...inspectionData,
         id: docId,
         stampedAt: new Date().toISOString()
     };
-    await setDoc(docRef, payload, { merge: true });
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'adminInspections', docId);
+        await setDoc(docRef, payload, { merge: true });
+    } catch (e) {
+        console.warn("寫入行政抽查資料未完成:", e);
+    }
     return payload;
 }
 
@@ -199,6 +234,12 @@ export async function saveAdminInspection(inspectionData) {
 // 全校全校廣播 (Campus Safety Announcements)
 // ==========================================
 export async function getCampusAnnouncements(schoolId) {
+    const localKey = `campus_announcements_${schoolId}`;
+    let cached = [];
+    try {
+        cached = JSON.parse(localStorage.getItem(localKey) || '[]');
+    } catch (e) {}
+
     try {
         const snap = await getDocs(query(
             collection(db, 'artifacts', globalAppId, 'public', 'data', 'campusAnnouncements'),
@@ -206,26 +247,82 @@ export async function getCampusAnnouncements(schoolId) {
         ));
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        if (list.length > 0) {
+            localStorage.setItem(localKey, JSON.stringify(list));
+            return list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        }
     } catch (e) {
-        console.warn("取得全校廣播失敗", e);
-        return [];
+        console.warn("取得全校廣播失敗，使用本地快取", e);
     }
+    return cached.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 export async function saveCampusAnnouncement(announcementData) {
     const docId = announcementData.id || `ann_${Date.now()}`;
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'campusAnnouncements', docId);
     const payload = {
         ...announcementData,
         id: docId,
-        createdAt: new Date().toISOString()
+        createdAt: announcementData.createdAt || new Date().toISOString()
     };
-    await setDoc(docRef, payload, { merge: true });
+
+    // 1. 本地快取
+    try {
+        const localKey = `campus_announcements_${announcementData.schoolId}`;
+        const cached = JSON.parse(localStorage.getItem(localKey) || '[]');
+        const idx = cached.findIndex(b => b.id === docId);
+        if (idx >= 0) cached[idx] = { ...cached[idx], ...payload };
+        else cached.unshift(payload);
+        localStorage.setItem(localKey, JSON.stringify(cached));
+    } catch (e) {}
+
+    // 2. 雲端同步
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'campusAnnouncements', docId);
+        await setDoc(docRef, payload, { merge: true });
+    } catch (e) {
+        console.warn("寫入雲端全校廣播警告:", e);
+    }
     return payload;
 }
 
-export async function toggleCampusAnnouncement(annId, active) {
-    const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'campusAnnouncements', annId);
-    await updateDoc(docRef, { active });
+export async function toggleCampusAnnouncement(annId, active, fallbackData = null) {
+    const payload = {
+        active,
+        ...(fallbackData || {}),
+        updatedAt: new Date().toISOString()
+    };
+
+    // 1. 本地快取更新
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('campus_announcements_')) {
+                const cached = JSON.parse(localStorage.getItem(key) || '[]');
+                const idx = cached.findIndex(b => b.id === annId);
+                if (idx >= 0) {
+                    cached[idx] = { ...cached[idx], ...payload };
+                    localStorage.setItem(key, JSON.stringify(cached));
+                }
+            }
+        }
+        if (fallbackData && fallbackData.schoolId) {
+            const localKey = `campus_announcements_${fallbackData.schoolId}`;
+            const cached = JSON.parse(localStorage.getItem(localKey) || '[]');
+            const idx = cached.findIndex(b => b.id === annId);
+            if (idx >= 0) {
+                cached[idx] = { ...cached[idx], ...payload };
+            } else {
+                cached.unshift({ ...fallbackData, ...payload, id: annId });
+            }
+            localStorage.setItem(localKey, JSON.stringify(cached));
+        }
+    } catch (e) {}
+
+    // 2. 雲端同步
+    try {
+        const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'campusAnnouncements', annId);
+        await setDoc(docRef, payload, { merge: true });
+    } catch (e) {
+        console.warn("更新雲端全校廣播警告:", e);
+    }
 }

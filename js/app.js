@@ -35,7 +35,6 @@ const exitImpersonationBtn = document.getElementById('exit-impersonation-btn');
 
 const btnGoogleLogin = document.getElementById('btn-google-login');
 const schoolLoginForm = document.getElementById('school-login-form');
-const btnFillDemo = document.getElementById('btn-fill-demo');
 
 // 初始化認證狀態監聽
 initAuthListener((state) => {
@@ -65,7 +64,7 @@ function updateUIForAuthState(state) {
     if (state.role === 'super_admin' && !state.isImpersonating) {
         // 最高管理端檢視
         headerSchoolName.textContent = '最高管理中樞 (ianw.solar@gmail.com)';
-        headerRoleBadge.textContent = '👑 最高管理員';
+        headerRoleBadge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i>最高管理員';
         headerRoleBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200';
         navSuperAdminBtn.classList.remove('hidden');
         mobileSuperTabBtn.classList.remove('hidden');
@@ -73,7 +72,9 @@ function updateUIForAuthState(state) {
     } else {
         // 學校管理端檢視 (或最高管理員穿透檢視)
         headerSchoolName.textContent = state.currentSchool?.name || '學校管理端';
-        headerRoleBadge.textContent = state.isImpersonating ? '👑 穿透檢視' : '🏫 學校端';
+        headerRoleBadge.innerHTML = state.isImpersonating 
+            ? '<i class="fa-solid fa-crown mr-1"></i>穿透檢視' 
+            : '<i class="fa-solid fa-school mr-1"></i>學校端';
         headerRoleBadge.className = state.isImpersonating 
             ? 'text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200'
             : 'text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200';
@@ -166,13 +167,6 @@ schoolLoginForm.addEventListener('submit', async (e) => {
     await loginWithSchoolCredentials(user, pass);
 });
 
-// 一鍵填入測試帳密
-btnFillDemo.addEventListener('click', () => {
-    triggerHaptic('light');
-    document.getElementById('school-login-user').value = 'antigravity';
-    document.getElementById('school-login-pass').value = '123456';
-    showToast('已填入標準測試帳密：antigravity / 123456', 'info');
-});
 
 // 登出按鈕
 headerLogoutBtn.addEventListener('click', async () => {

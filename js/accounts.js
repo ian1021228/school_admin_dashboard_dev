@@ -611,7 +611,11 @@ export async function renderAccountsDashboard(container, currentSchool) {
                 triggerHaptic('medium');
                 const nextState = !isReadOnly;
                 c.isReadOnly = nextState;
-                await saveSchoolClass(c);
+                try {
+                    await saveSchoolClass(c);
+                } catch (e) {
+                    console.warn("切換唯讀狀態已同步至本地快取:", e);
+                }
                 showToast(`已將【${c.className}】設定為：${nextState ? '唯讀保護模式 (無法新增作業)' : '正常讀寫模式'}`, nextState ? 'warning' : 'success');
                 loadClasses();
             });

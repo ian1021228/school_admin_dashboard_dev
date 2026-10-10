@@ -16,11 +16,11 @@ export const firebaseConfig = {
 // 預設測試學校資料
 export const DEFAULT_SCHOOL = {
     id: 'shs',
-    name: '高雄市立七賢國中',
-    code: 'SHS_KAOHSIUNG',
+    name: '測試國中',
+    code: 'TEST_JHS',
     adminUsername: 'antigravity',
     adminPassword: 'password123',
-    contactPerson: '王禹硯 資訊組長',
+    contactPerson: '測試學校資訊組長',
     phone: '07-211-0561',
     address: '高雄市前金區七賢二路397號',
     createdAt: '2026-09-01T08:00:00Z',
