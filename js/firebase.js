@@ -161,17 +161,62 @@ export async function saveSchoolClass(classData) {
 
         const scRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', docId);
         await setDoc(scRef, payload, { merge: true });
+
+        // 也寫入班級代碼直接索引，方便教師端跨校即時查詢
+        const scCodeRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', classData.classCode);
+        await setDoc(scCodeRef, payload, { merge: true });
+
+        // 獨立寫入學生 PIN 碼專屬通道 sch_pins_{classCode}，保證教師端即時秒級取得
+        if (classData.studentPins && Object.keys(classData.studentPins).length > 0) {
+            const pinDocRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', `sch_pins_${classData.classCode}`);
+            await setDoc(pinDocRef, {
+                classCode: classData.classCode,
+                className: classData.className,
+                schoolId: classData.schoolId,
+                studentPins: classData.studentPins,
+                studentAccounts: classData.studentAccounts || [],
+                studentCount: classData.studentCount || 30,
+                missingSeats: classData.missingSeats || [],
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        }
     } catch (e) {
         console.warn("寫入雲端學校班級提示:", e);
     }
 
-    // 同步到 boundAccounts 使得教師端能以此帳密登入並自動載入該班級
-    if (classData.teacherUsername && classData.teacherPassword) {
-        try {
-            const boundRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', classData.teacherUsername.toLowerCase().trim());
+    // 同步寫入 parentClasses，使家長端與教師端能即時取得學校指派之 PIN 碼
+    try {
+        const pCodes = [classData.parentAccessCode, classData.classCode, `SHS_${classData.classCode}`, `shs_${classData.classCode}`].filter(Boolean);
+        for (const pc of pCodes) {
+            const pRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'parentClasses', String(pc).trim());
+            await setDoc(pRef, {
+                classCode: classData.classCode,
+                className: classData.className,
+                studentPins: classData.studentPins || {},
+                studentAccounts: classData.studentAccounts || [],
+                studentCount: classData.studentCount || 30,
+                missingSeats: classData.missingSeats || [],
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.warn("寫入 parentClasses 提示:", e);
+    }
+
+    // 同步到 boundAccounts 使得教師端能以此帳密登入並自動載入該班級與最新 PIN 碼
+    try {
+        const teacherTargets = [
+            classData.teacherUsername,
+            `shs_${classData.classCode}_teacher`,
+            `t${classData.classCode}_shs`,
+            `t${classData.classCode}_${classData.schoolId}`
+        ].filter(Boolean);
+
+        for (const tu of teacherTargets) {
+            const boundRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', tu.toLowerCase().trim());
             await setDoc(boundRef, {
-                username: classData.teacherUsername.trim(),
-                password: classData.teacherPassword,
+                username: tu.trim(),
+                password: classData.teacherPassword || '123456',
                 role: 'teacher',
                 schoolId: classData.schoolId,
                 classCode: classData.classCode,
@@ -185,9 +230,9 @@ export async function saveSchoolClass(classData) {
                 studentAccounts: classData.studentAccounts || [],
                 updatedAt: new Date().toISOString()
             }, { merge: true });
-        } catch (e) {
-            console.warn("同步至 boundAccounts 提示:", e);
         }
+    } catch (e) {
+        console.warn("同步至 boundAccounts 提示:", e);
     }
 
     return payload;

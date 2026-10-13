@@ -297,12 +297,24 @@ export async function renderAccountsDashboard(container, currentSchool) {
                         </div>
                     </div>
 
+                    <!-- 座號對應與空號規則提示卡片 -->
+                    <div class="p-3 bg-indigo-50/90 border border-indigo-200/90 rounded-2xl text-xs text-indigo-950 font-medium flex items-start gap-2.5 shadow-2xs">
+                        <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                            <i class="fa-solid fa-circle-info text-xs"></i>
+                        </div>
+                        <div class="leading-relaxed">
+                            <span class="font-black text-indigo-950">座號編號與空號規則說明：</span>
+                            編輯器每一行左側灰色數字為不可編輯的固定座號（第 1 行為 1 號、第 2 行為 2 號...）。
+                            <b class="text-indigo-900 underline decoration-indigo-300 underline-offset-2">若某一行內容留空，即代表該座號為「缺號 / 空號」</b>（例如 1 號輸入 PIN 碼後，第 2 行空白代表 2 號缺號跳過）。按下 Enter 即可加入新的一行，刪除該行該座號即自動消失。
+                        </div>
+                    </div>
+
                     <!-- 模式一：手動設定說明與操作卡片 -->
                     <div id="pin-card-manual" class="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-200/80 text-xs text-indigo-950 leading-relaxed font-medium space-y-1">
                         <div class="font-bold flex items-center justify-between">
                             <span class="flex items-center gap-1.5 text-indigo-900">
                                 <i class="fa-solid fa-pen-to-square text-indigo-600"></i>
-                                <span>手動設定模式說明：</span>
+                                <span>手動設定模式：</span>
                             </span>
                             <div class="flex items-center gap-2">
                                 <button type="button" id="btn-fill-student-demo" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer">
@@ -310,11 +322,11 @@ export async function renderAccountsDashboard(container, currentSchool) {
                                 </button>
                                 <span class="text-slate-300">|</span>
                                 <button type="button" id="btn-clear-pin-input" class="text-xs text-slate-500 hover:text-slate-700 font-bold cursor-pointer">
-                                    清空
+                                    清空所有 PIN
                                 </button>
                             </div>
                         </div>
-                        <p class="text-indigo-800 text-[11px]">每行輸入一個認證碼（依行數依序對應座號 1..N），或輸入 <code>座號 認證碼</code>（如 <code>1 89432</code>）。<b>不需輸入學生姓名</b>。</p>
+                        <p class="text-indigo-800 text-[11px]">每行輸入一個認證碼對應座號（或直接整欄貼上），<b>不需輸入學生姓名</b>。開通時所有 PIN 碼預設留白。</p>
                     </div>
 
                     <!-- 模式二：身分證末五碼說明與操作卡片 -->
@@ -322,13 +334,13 @@ export async function renderAccountsDashboard(container, currentSchool) {
                         <div class="font-bold flex items-center justify-between">
                             <span class="flex items-center gap-1.5 text-teal-900">
                                 <i class="fa-solid fa-id-card-clip text-teal-600"></i>
-                                <span>指定格式（身分證字號末五碼）模式說明：</span>
+                                <span>指定格式（身分證字號末五碼）模式：</span>
                             </span>
                             <button type="button" id="btn-fill-idcard-demo" class="text-xs text-teal-700 hover:text-teal-900 font-bold hover:underline cursor-pointer">
                                 帶入 30 筆示範身分證字號
                             </button>
                         </div>
-                        <p class="text-teal-800 text-[11px]">可批量貼上學生身分證字號（例如每行一個，如 <code>A123456789</code>，支援由 Excel 複製一欄整批貼上）。<b>不需輸入學生姓名</b>。</p>
+                        <p class="text-teal-800 text-[11px]">可批量貼上學生身分證字號（例如每行一個，支援由 Excel 複製一欄整批貼上）。<b>不需輸入學生姓名</b>。</p>
                         
                         <div class="pt-1 flex items-center gap-2 flex-wrap">
                             <button type="button" id="btn-extract-last5" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-black text-xs shadow-md shadow-teal-600/20 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
@@ -339,13 +351,50 @@ export async function renderAccountsDashboard(container, currentSchool) {
                         </div>
                     </div>
 
-                    <!-- 輸入與貼上區域 -->
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label id="students-input-label" class="text-xs font-bold text-slate-700 whitespace-nowrap">輸入各座號成績認證碼（每行一筆）</label>
+                    <!-- 帶灰色座號行號的文字編輯器與貼上區域 -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label id="students-input-label" class="text-xs font-bold text-slate-700 whitespace-nowrap">編輯成績認證碼（左側為灰色座號編號）：</label>
                             <span id="students-batch-preview-count" class="text-xs font-bold text-slate-500 whitespace-nowrap">尚未輸入資料</span>
                         </div>
-                        <textarea id="students-batch-input" rows="6" class="w-full p-3 font-mono text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none leading-relaxed" placeholder="1 89432&#10;2 56789&#10;3 12345..."></textarea>
+
+                        <!-- 編輯器視窗 (包含左側固定不可編輯座號編號) -->
+                        <div class="rounded-2xl border border-slate-300 bg-white overflow-hidden shadow-xs focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                            <div class="flex items-stretch min-h-[220px] max-h-[300px] relative font-mono">
+                                <!-- 左側：灰色不可編輯座號編號 Gutter -->
+                                <div id="pin-editor-gutter" class="w-14 sm:w-16 py-3 px-1.5 bg-slate-100/90 border-r border-slate-200 text-slate-400 font-mono text-xs sm:text-sm text-right select-none flex flex-col overflow-hidden shrink-0">
+                                    <!-- 動態生成 1, 2, 3... -->
+                                </div>
+                                <!-- 右側：文字輸入區 -->
+                                <textarea 
+                                    id="students-batch-input" 
+                                    rows="9" 
+                                    class="flex-1 py-3 px-3 bg-transparent text-slate-800 font-mono text-xs sm:text-sm leading-6 outline-none resize-none overflow-y-auto custom-scrollbar whitespace-pre"
+                                    placeholder="在此輸入或貼上 PIN 碼...&#10;第 1 行為 1 號&#10;第 2 行留空代表 2 號缺號&#10;第 3 行為 3 號..."
+                                    spellcheck="false"
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 快捷工具列：一鍵清除空白行、一鍵清除隔行空白 -->
+                        <div class="flex items-center justify-between gap-2 pt-1 flex-wrap text-xs">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" id="btn-remove-blank-lines" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200 active:scale-95 shadow-2xs" title="移除貼上內容中的所有空白行，讓所有 PIN 連號對齊">
+                                    <i class="fa-solid fa-filter text-indigo-600"></i>
+                                    <span>一鍵清除空白行 (連號對齊)</span>
+                                </button>
+                                <button type="button" id="btn-remove-alternate-blanks" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200 active:scale-95 shadow-2xs" title="清除每隔一行固定出現的空白行 (例如由試算表複製貼上帶有雙重換行時)">
+                                    <i class="fa-solid fa-arrows-split-up-and-left text-teal-600"></i>
+                                    <span>一鍵清除隔行空白</span>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-clear-editor-all" class="text-xs text-rose-500 hover:text-rose-700 font-bold hover:underline cursor-pointer flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                    <span>全部清空</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 即時解析預覽表格 -->
@@ -1089,14 +1138,7 @@ ${lines.join('\n')}
         triggerHaptic('light');
         updateStudentsClassSelect(allClassList);
         studentsClassSelect.value = classCode;
-        const targetClass = allClassList.find(c => c.classCode === classCode);
-        if (targetClass?.studentPins && Object.keys(targetClass.studentPins).length > 0) {
-            const lines = Object.entries(targetClass.studentPins)
-                .map(([s, p]) => `${s} ${p}`);
-            studentsInput.value = lines.join('\n');
-        } else {
-            studentsInput.value = '';
-        }
+        initEditorForClass(classCode);
         switchPinMode('manual');
         studentsModal.classList.remove('hidden');
     }
@@ -1426,6 +1468,10 @@ ${lines.join('\n')}
     const pinPreviewContainer = container.querySelector('#pin-preview-container');
     const pinPreviewBadge = container.querySelector('#pin-preview-badge');
     const studentsInputLabel = container.querySelector('#students-input-label');
+    const pinGutter = container.querySelector('#pin-editor-gutter');
+    const btnRemoveBlankLines = container.querySelector('#btn-remove-blank-lines');
+    const btnRemoveAltBlanks = container.querySelector('#btn-remove-alternate-blanks');
+    const btnClearEditorAll = container.querySelector('#btn-clear-editor-all');
 
     let currentPinMode = 'manual'; // 'manual' 或 'idcard'
     let currentParsedPins = {};
@@ -1438,15 +1484,15 @@ ${lines.join('\n')}
             pinModeBtnIdcard.className = 'py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer font-bold';
             pinCardManual.classList.remove('hidden');
             pinCardIdcard.classList.add('hidden');
-            studentsInputLabel.textContent = '輸入各座號成績認證碼（每行一筆，不需輸入姓名）：';
-            studentsInput.placeholder = '1 89432\n2 56789\n3 12345...';
+            studentsInputLabel.textContent = '編輯成績認證碼（左側為灰色不可編輯座號編號）：';
+            studentsInput.placeholder = '在此輸入或貼上 PIN 碼...\n第 1 行為 1 號\n第 2 行留空代表 2 號缺號\n第 3 行為 3 號...';
         } else {
             pinModeBtnIdcard.className = 'py-1.5 rounded-lg bg-white text-teal-700 shadow-2xs font-black transition-all cursor-pointer';
             pinModeBtnManual.className = 'py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all cursor-pointer font-bold';
             pinCardIdcard.classList.remove('hidden');
             pinCardManual.classList.add('hidden');
-            studentsInputLabel.textContent = '批量貼上身分證字號（每行一筆，按下「自動擷取末五碼」）：';
-            studentsInput.placeholder = 'A123456789\nB223456789\nC198765432...';
+            studentsInputLabel.textContent = '批量貼上身分證字號（左側為灰色座號，貼上後按「自動擷取末五碼」）：';
+            studentsInput.placeholder = 'A123456789\nB223456789\n（空白行代表該號缺號）\nC198765432...';
         }
         parseAndRenderPinPreview();
     }
@@ -1454,51 +1500,113 @@ ${lines.join('\n')}
     pinModeBtnManual.addEventListener('click', () => switchPinMode('manual'));
     pinModeBtnIdcard.addEventListener('click', () => switchPinMode('idcard'));
 
-    // 解析並渲染 PIN 預覽
+    // 更新左側灰色不可編輯的座號編號 Gutter
+    function updateEditorGutter() {
+        if (!pinGutter || !studentsInput) return;
+        const rawLines = studentsInput.value.split('\n');
+        const count = Math.max(1, rawLines.length);
+        let html = '';
+        for (let i = 1; i <= count; i++) {
+            html += `<div class="h-6 leading-6 text-slate-400 font-mono text-xs sm:text-sm font-semibold select-none pr-1.5 text-right whitespace-nowrap">${i}</div>`;
+        }
+        pinGutter.innerHTML = html;
+        pinGutter.scrollTop = studentsInput.scrollTop;
+    }
+
+    // 齊步滾動
+    studentsInput.addEventListener('scroll', () => {
+        if (pinGutter) pinGutter.scrollTop = studentsInput.scrollTop;
+    });
+
+    // 初始化目標班級編輯器內容（一開始所有 PIN 碼皆為空白，第 1 行 1 號、第 2 行 2 號...）
+    function initEditorForClass(classCode) {
+        const targetClass = allClassList.find(c => c.classCode === classCode);
+        const studentCount = targetClass?.studentCount || 30;
+
+        if (targetClass?.studentPins && Object.keys(targetClass.studentPins).length > 0) {
+            const maxSeat = Math.max(studentCount, ...Object.keys(targetClass.studentPins).map(Number));
+            const lines = [];
+            for (let s = 1; s <= maxSeat; s++) {
+                const pin = targetClass.studentPins[String(s)];
+                lines.push(pin !== undefined ? String(pin) : '');
+            }
+            studentsInput.value = lines.join('\n');
+        } else {
+            // 一開始所有 PIN 碼都要是空白的，第一行編號 1，第二行編號 2，以此類推
+            studentsInput.value = Array(studentCount).fill('').join('\n');
+        }
+        updateEditorGutter();
+        parseAndRenderPinPreview();
+    }
+
+    // 即時解析預覽表格（支援空白行為空號）
     function parseAndRenderPinPreview() {
-        const text = studentsInput.value.trim();
-        const lines = text ? text.split('\n').map(l => l.trim()).filter(Boolean) : [];
+        updateEditorGutter();
+        const rawLines = studentsInput.value.split('\n');
         currentParsedPins = {};
+        const previewItems = [];
+        let validPinCount = 0;
+        let emptyLineCount = 0;
 
-        lines.forEach((line, idx) => {
-            const parts = line.split(/[\s,，\t]+/).filter(Boolean);
-            if (parts.length === 0) return;
+        rawLines.forEach((rawLine, idx) => {
+            const seat = idx + 1;
+            const trimmed = rawLine.trim();
 
-            let seat = idx + 1;
+            if (!trimmed) {
+                emptyLineCount++;
+                previewItems.push({
+                    seat,
+                    pin: '',
+                    isBlank: true
+                });
+                return;
+            }
+
+            const parts = trimmed.split(/[\s,，\t]+/).filter(Boolean);
             let pinVal = '';
 
             if (parts.length >= 2 && !isNaN(parseInt(parts[0], 10))) {
-                seat = parseInt(parts[0], 10);
-                // 取最後一項作為 PIN 或身分證號
-                const rawToken = parts[parts.length - 1];
-                pinVal = rawToken;
+                pinVal = parts[parts.length - 1];
             } else {
                 pinVal = parts[0];
             }
 
             if (pinVal) {
                 currentParsedPins[String(seat)] = pinVal;
+                validPinCount++;
+                previewItems.push({
+                    seat,
+                    pin: pinVal,
+                    isBlank: false
+                });
             }
         });
 
-        const count = Object.keys(currentParsedPins).length;
-        pinPreviewBadge.textContent = `已預覽 ${count} 筆`;
-        studentsPreviewCount.textContent = count > 0 ? `已輸入 ${count} 筆認證碼` : '尚未輸入資料';
+        pinPreviewBadge.textContent = `已設定 ${validPinCount} 筆 (空號 ${emptyLineCount} 筆)`;
+        studentsPreviewCount.textContent = validPinCount > 0 
+            ? `已輸入 ${validPinCount} 筆認證碼（共 ${rawLines.length} 行，空號 ${emptyLineCount} 行）` 
+            : `尚未設定有效認證碼（共 ${rawLines.length} 行空號）`;
 
-        if (count === 0) {
+        if (previewItems.length === 0) {
             pinPreviewContainer.innerHTML = `<div class="col-span-full py-3 text-center text-slate-400">請輸入或貼上資料以預覽認證碼</div>`;
             return;
         }
 
-        const seatList = Object.keys(currentParsedPins).map(Number).sort((a, b) => a - b);
-        pinPreviewContainer.innerHTML = seatList.map(s => {
-            const pin = currentParsedPins[String(s)];
-            const is5Digits = String(pin).length === 5;
+        pinPreviewContainer.innerHTML = previewItems.map(item => {
+            if (item.isBlank) {
+                return `
+                    <div class="p-2 rounded-xl border border-dashed border-slate-200 bg-slate-100/60 flex items-center justify-between opacity-60">
+                        <span class="font-bold text-slate-400 font-mono">${item.seat}號</span>
+                        <span class="text-[10px] text-slate-400 font-bold font-mono">（空號 / 留空）</span>
+                    </div>
+                `;
+            }
+            const is5Digits = String(item.pin).length === 5;
             return `
-                <div class="p-2 rounded-xl border border-slate-200/80 bg-white flex items-center justify-between shadow-2xs">
-                    <span class="font-bold text-slate-700 font-mono">${s}號</span>
-                    <span class="font-black px-1.5 py-0.5 rounded text-[11px] font-mono ${is5Digits ? 'bg-teal-50 text-teal-800 border border-teal-200' : 'bg-slate-100 text-slate-800'}">
-                        ${escapeHtml(pin)}
+                <div class="p-2 rounded-xl border border-teal-200 bg-teal-50/60 flex items-center justify-between shadow-2xs">
+                    <span class="font-bold text-teal-950 font-mono">${item.seat}號</span>
+                    <span class="font-black px-1.5 py-0.5 rounded text-[11px] font-mono ${is5Digits ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-800'}">
+                        ${escapeHtml(item.pin)}
                     </span>
                 </div>
             `;
@@ -1506,61 +1614,107 @@ ${lines.join('\n')}
     }
 
     studentsInput.addEventListener('input', parseAndRenderPinPreview);
+    studentsInput.addEventListener('keyup', updateEditorGutter);
+    studentsInput.addEventListener('change', parseAndRenderPinPreview);
+
+    // 下方一鍵清除快捷功能：
+    // 1. 一鍵清除空白行 (連號對齊)
+    if (btnRemoveBlankLines) {
+        btnRemoveBlankLines.addEventListener('click', () => {
+            triggerHaptic('light');
+            const lines = studentsInput.value.split('\n');
+            const filtered = lines.filter(l => l.trim() !== '');
+            if (filtered.length === lines.length) {
+                showToast('目前內容中沒有空白行', 'info');
+                return;
+            }
+            studentsInput.value = filtered.join('\n');
+            parseAndRenderPinPreview();
+            showToast('已清除所有空白行，所有認證碼已連號對齊！', 'success');
+        });
+    }
+
+    // 2. 一鍵清除隔行空白 (針對試算表複製產生的雙重換行)
+    if (btnRemoveAltBlanks) {
+        btnRemoveAltBlanks.addEventListener('click', () => {
+            triggerHaptic('light');
+            const lines = studentsInput.value.split('\n');
+            const oddBlanks = lines.filter((l, i) => i % 2 === 1 && l.trim() === '').length;
+            const evenBlanks = lines.filter((l, i) => i % 2 === 0 && l.trim() === '').length;
+            let filtered = [];
+
+            if (oddBlanks >= lines.length * 0.25) {
+                filtered = lines.filter((l, i) => !(i % 2 === 1 && l.trim() === ''));
+            } else if (evenBlanks >= lines.length * 0.25) {
+                filtered = lines.filter((l, i) => !(i % 2 === 0 && l.trim() === ''));
+            } else {
+                filtered = lines.filter(l => l.trim() !== '');
+            }
+            studentsInput.value = filtered.join('\n');
+            parseAndRenderPinPreview();
+            showToast('已清除隔行空白行！', 'success');
+        });
+    }
+
+    // 3. 全部清空
+    if (btnClearEditorAll) {
+        btnClearEditorAll.addEventListener('click', () => {
+            triggerHaptic('light');
+            const targetCode = studentsClassSelect.value;
+            const targetClass = allClassList.find(c => c.classCode === targetCode);
+            const count = targetClass?.studentCount || 30;
+            studentsInput.value = Array(count).fill('').join('\n');
+            parseAndRenderPinPreview();
+            showToast(`已全部清空，重設為 ${count} 行空白行（1~${count}號）`, 'info');
+        });
+    }
+
+    // 4. 清空所有 PIN
+    btnClearPinInput.addEventListener('click', () => {
+        triggerHaptic('light');
+        const targetCode = studentsClassSelect.value;
+        const targetClass = allClassList.find(c => c.classCode === targetCode);
+        const count = targetClass?.studentCount || 30;
+        studentsInput.value = Array(count).fill('').join('\n');
+        parseAndRenderPinPreview();
+        showToast('已清空所有 PIN 碼內容', 'info');
+    });
 
     // 彈窗開啟時
     studentsBtn.addEventListener('click', () => {
         triggerHaptic('light');
         updateStudentsClassSelect(allClassList);
-        const targetCode = studentsClassSelect.value;
-        const targetClass = allClassList.find(c => c.classCode === targetCode);
-        if (targetClass?.studentPins && Object.keys(targetClass.studentPins).length > 0) {
-            const lines = Object.entries(targetClass.studentPins)
-                .map(([s, p]) => `${s} ${p}`);
-            studentsInput.value = lines.join('\n');
-        } else {
-            studentsInput.value = '';
-        }
+        initEditorForClass(studentsClassSelect.value);
         switchPinMode('manual');
         studentsModal.classList.remove('hidden');
     });
 
-    // 目標班級切換時載入既有 PIN
+    // 目標班級切換時載入
     studentsClassSelect.addEventListener('change', () => {
-        const targetCode = studentsClassSelect.value;
-        const targetClass = allClassList.find(c => c.classCode === targetCode);
-        if (targetClass?.studentPins && Object.keys(targetClass.studentPins).length > 0) {
-            const lines = Object.entries(targetClass.studentPins)
-                .map(([s, p]) => `${s} ${p}`);
-            studentsInput.value = lines.join('\n');
-        } else {
-            studentsInput.value = '';
-        }
-        parseAndRenderPinPreview();
+        initEditorForClass(studentsClassSelect.value);
     });
 
-    // 一鍵手動隨機產生 6 碼 PIN
+    // 一鍵手動隨機產生 6 碼 PIN (跳過缺號)
     btnFillDemo.addEventListener('click', () => {
         triggerHaptic('light');
         const targetCode = studentsClassSelect.value || '701';
         const targetClass = allClassList.find(c => c.classCode === targetCode);
         const studentCount = targetClass?.studentCount || 30;
+        const missing = targetClass?.missingSeats || [];
         const demoLines = [];
 
         for (let i = 1; i <= studentCount; i++) {
-            const pin = String(Math.floor(100000 + Math.random() * 900000));
-            demoLines.push(`${i} ${pin}`);
+            if (missing.includes(i)) {
+                demoLines.push(''); // 缺號行留白！
+            } else {
+                const pin = String(Math.floor(100000 + Math.random() * 900000));
+                demoLines.push(pin);
+            }
         }
 
         studentsInput.value = demoLines.join('\n');
         parseAndRenderPinPreview();
-        showToast(`已隨機產生【${targetClass?.className || targetCode}】${studentCount} 位學生專屬 6 碼 PIN！`, 'info');
-    });
-
-    // 清空輸入
-    btnClearPinInput.addEventListener('click', () => {
-        studentsInput.value = '';
-        parseAndRenderPinPreview();
-        showToast('已清空輸入框', 'info');
+        showToast(`已隨機產生【${targetClass?.className || targetCode}】${studentCount - missing.length} 位學生專屬 6 碼 PIN（缺號已留空）！`, 'info');
     });
 
     // 帶入 30 筆示範身分證字號
@@ -1586,43 +1740,23 @@ ${lines.join('\n')}
         showToast(`已載入 ${studentCount} 筆示範身分證字號，請點擊「自動擷取末五碼按鈕」！`, 'info', 4000);
     });
 
-    // 按下「自動擷取末五碼按鈕」核心功能
+    // 按下「自動擷取末五碼按鈕」
     btnExtractLast5.addEventListener('click', () => {
         triggerHaptic('medium');
-        const rawText = studentsInput.value.trim();
-        if (!rawText) {
-            showToast('請先貼上學生身分證字號清單！', 'warning');
-            return;
-        }
-
-        const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-        const resultLines = [];
+        const lines = studentsInput.value.split('\n');
         let extractedCount = 0;
-
-        lines.forEach((line, idx) => {
-            const parts = line.split(/[\s,，\t]+/).filter(Boolean);
-            if (parts.length === 0) return;
-
-            let seat = idx + 1;
-            let idStr = '';
-
-            if (parts.length >= 2 && !isNaN(parseInt(parts[0], 10))) {
-                seat = parseInt(parts[0], 10);
-                idStr = parts[parts.length - 1];
-            } else {
-                idStr = parts[0];
-            }
-
-            // 過濾並擷取末五碼
-            const cleanId = idStr.replace(/[^A-Za-z0-9]/g, '');
+        const resultLines = lines.map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return '';
+            const cleanId = trimmed.replace(/[^A-Za-z0-9]/g, '');
             if (cleanId.length >= 5) {
-                const last5 = cleanId.slice(-5);
-                resultLines.push(`${seat} ${last5}`);
                 extractedCount++;
+                return cleanId.slice(-5);
             } else if (cleanId.length > 0) {
-                resultLines.push(`${seat} ${cleanId}`);
                 extractedCount++;
+                return cleanId;
             }
+            return '';
         });
 
         if (extractedCount === 0) {
