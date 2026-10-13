@@ -175,18 +175,50 @@ export async function renderAttendanceDashboard(container, currentSchool) {
         const tableBody = container.querySelector('#att-table-body');
         tableBody.innerHTML = '';
 
-        effectiveClasses.forEach((cls, idx) => {
+        for (let idx = 0; idx < effectiveClasses.length; idx++) {
+            const cls = effectiveClasses[idx];
             const missingCount = (cls.missingSeats || []).length;
             const expectedCount = (cls.studentCount || 30) - missingCount;
             totalStudents += expectedCount;
 
-            // 尋找已有的通報或產生模擬出席紀錄
-            const record = attendanceRecords.find(r => r.classCode === cls.classCode);
-            const isReported = record ? true : (idx !== 1 && idx !== 4); // 模擬大部分已報，少數未報
-            const absentSeats = record?.absentSeats || (idx === 0 ? [{ seat: 3, type: '病假', note: '發燒請假一天' }] : (idx === 2 ? [{ seat: 12, type: '事假', note: '家中有事' }] : []));
-            const tardyCount = record?.tardyCount || (idx === 3 ? 1 : 0);
+            // 尋找已有的通報或自 parentClasses 獲取真實出席紀錄
+            let record = attendanceRecords.find(r => r.classCode === cls.classCode);
+            let isReported = Boolean(record);
+            let absentSeats = record?.absentSeats || [];
+            let tardyCount = record?.tardyCount || 0;
+            let reportedTime = record?.updatedAt ? new Date(record.updatedAt).toTimeString().slice(0, 5) : '07:55';
+
+            // 若 sch_att 尚無紀錄，自 parentClasses 即時撈取該班導師在教室點名之真實出缺席
+            if (!record && (cls.classCode || cls.parentAccessCode)) {
+                try {
+                    const parentData = await getClassParentData(cls.classCode || cls.parentAccessCode);
+                    const dateAtt = parentData?.attendance?.[curDate];
+                    if (dateAtt && Object.keys(dateAtt).length > 0) {
+                        isReported = true;
+                        absentSeats = [];
+                        tardyCount = 0;
+                        const missing = Array.isArray(cls.missingSeats) ? cls.missingSeats : [];
+                        const total = cls.studentCount || 30;
+                        for (let s = 1; s <= total; s++) {
+                            if (missing.includes(s)) continue;
+                            const item = dateAtt[s] || { status: 'present' };
+                            if (item.status === 'tardy') {
+                                tardyCount++;
+                            } else if (item.status && item.status !== 'present') {
+                                const typeMap = { sick: '病假', personal: '事假', official: '公假' };
+                                absentSeats.push({
+                                    seat: s,
+                                    type: typeMap[item.status] || item.status,
+                                    note: item.note || (item.time ? `到校 ${item.time}` : '導師點名登記')
+                                });
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
             const absentCount = absentSeats.length;
-            const presentCount = isReported ? (expectedCount - absentCount) : 0;
+            const presentCount = isReported ? Math.max(0, expectedCount - absentCount) : 0;
 
             if (isReported) {
                 reportedClassesCount++;
@@ -211,7 +243,7 @@ export async function renderAttendanceDashboard(container, currentSchool) {
                 <td class="py-3.5 px-4">
                     ${isReported 
                         ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
-                             <i class="fa-solid fa-circle-check text-[10px]"></i> 07:${50 + (idx % 10)} 已通報
+                             <i class="fa-solid fa-circle-check text-[10px]"></i> ${reportedTime} 已通報
                            </span>`
                         : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">
                              <i class="fa-solid fa-clock text-[10px]"></i> 尚未通報
@@ -268,7 +300,7 @@ export async function renderAttendanceDashboard(container, currentSchool) {
             });
 
             tableBody.appendChild(tr);
-        });
+        }
 
         // 更新 KPI
         const totalClasses = effectiveClasses.length;

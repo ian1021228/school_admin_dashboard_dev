@@ -305,6 +305,28 @@ export async function saveAdminInspection(inspectionData) {
     } catch (e) {
         console.warn("寫入行政抽查資料提示:", e);
     }
+
+    // 跨端即時連動：寫入 parentClasses/{classCode} 讓該班導師端與家長端聯絡簿立即呈現查訖印戳
+    if (inspectionData.classCode) {
+        try {
+            const pRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'parentClasses', String(inspectionData.classCode).trim());
+            const pSnap = await getDoc(pRef);
+            let stamps = [];
+            if (pSnap.exists()) {
+                const pData = pSnap.data() || {};
+                stamps = Array.isArray(pData.inspectionStamps) ? pData.inspectionStamps : [];
+            }
+            stamps.unshift(payload);
+            await setDoc(pRef, {
+                inspectionStamps: stamps.slice(0, 20),
+                latestInspection: payload,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        } catch (e) {
+            console.warn("同步行政核章至 parentClasses 提示:", e);
+        }
+    }
+
     return payload;
 }
 
@@ -358,6 +380,46 @@ export async function saveCampusAnnouncement(announcementData) {
     } catch (e) {
         console.warn("寫入雲端全校廣播提示:", e);
     }
+
+    // 跨端即時連動：同步寫入 systemBroadcasts/main 讓全校教師端與家長端跑馬燈與小鈴鐺立即收到
+    try {
+        const bcRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'systemBroadcasts', 'main');
+        const snap = await getDoc(bcRef);
+        let broadcasts = [];
+        let history = [];
+        if (snap.exists()) {
+            const data = snap.data() || {};
+            broadcasts = Array.isArray(data.broadcasts) ? data.broadcasts : [];
+            history = Array.isArray(data.history) ? data.history : [];
+        }
+        const bcItem = {
+            id: payload.id,
+            title: payload.title,
+            content: payload.content,
+            message: `【${payload.title}】${payload.content}`,
+            level: payload.level || 'notice',
+            target: payload.target || 'all',
+            schoolId: payload.schoolId,
+            sender: '學校行政處室',
+            author: '學校行政處室',
+            authorName: '學校行政處室',
+            active: payload.active !== false,
+            createdAt: payload.createdAt
+        };
+        broadcasts = [bcItem, ...broadcasts.filter(b => b.id !== bcItem.id)].slice(0, 50);
+        history = [bcItem, ...history.filter(h => h.id !== bcItem.id)].slice(0, 50);
+        await setDoc(bcRef, {
+            active: payload.active !== false,
+            current: bcItem,
+            latest: bcItem,
+            broadcasts,
+            history,
+            updatedAt: new Date().toISOString()
+        }, { merge: true });
+    } catch (e) {
+        console.warn("同步至 systemBroadcasts/main 提示:", e);
+    }
+
     return payload;
 }
 
@@ -384,6 +446,28 @@ export async function toggleCampusAnnouncement(annId, active, fallbackData = nul
         await setDoc(docRef, { list, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (e) {
         console.warn("更新雲端全校廣播提示:", e);
+    }
+
+    try {
+        const bcRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'systemBroadcasts', 'main');
+        const snap = await getDoc(bcRef);
+        if (snap.exists()) {
+            const data = snap.data() || {};
+            let broadcasts = Array.isArray(data.broadcasts) ? data.broadcasts : [];
+            broadcasts = broadcasts.map(b => b.id === annId ? { ...b, active } : b);
+            let current = data.current;
+            if (current && current.id === annId) {
+                current = { ...current, active };
+            }
+            await setDoc(bcRef, {
+                broadcasts,
+                current,
+                active: current ? current.active : true,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.warn("更新 systemBroadcasts 狀態提示:", e);
     }
 }
 

@@ -66,9 +66,9 @@ export async function renderBroadcastDashboard(container, currentSchool) {
                         <label class="block text-xs font-bold text-slate-600 mb-1">通報等級</label>
                         <select id="bc-level" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white outline-none">
                             <option value="emergency">全校重大緊急事件 (最高警戒，全站醒目閃爍紅底跑馬燈)</option>
-                            <option value="weather">⚠️ 天候防汛預警 (停課、防颱與安全疏散防範)</option>
-                            <option value="epidemic">🛡️ 全校公共衛生 (流行性流感、腸病毒防護加強)</option>
-                            <option value="notice">📢 重要行政通報 (常態行政公告)</option>
+                            <option value="weather">天候防汛預警 (停課、防颱與安全疏散防範)</option>
+                            <option value="epidemic">全校公共衛生 (流行性流感、腸病毒防護加強)</option>
+                            <option value="notice">重要行政通報 (常態行政公告)</option>
                         </select>
                     </div>
 
