@@ -1,5 +1,5 @@
 // 全校班級、人數、缺號、學生帳號批量註冊與容量監控唯讀中樞 (Class & Account Provisioning & Storage Metering)
-import { getSchoolClasses, saveSchoolClass, deleteSchoolClass } from './firebase.js';
+import { getSchoolClasses, saveSchoolClass, deleteSchoolClass, fetchLatestClassPins } from './firebase.js';
 import { generateSecurePassword, safeCopyToClipboard, exportToCSV, showToast, triggerHaptic, escapeHtml } from './utils.js';
 
 export async function renderAccountsDashboard(container, currentSchool) {
@@ -974,18 +974,18 @@ export async function renderAccountsDashboard(container, currentSchool) {
             });
 
             // 查看該班學生 PIN 碼
-            tr.querySelector('.view-pins-btn').addEventListener('click', () => {
-                openViewPinsModal(c);
+            tr.querySelector('.view-pins-btn').addEventListener('click', async () => {
+                await openViewPinsModal(c);
             });
 
             // 批量設定該班 PIN 碼
-            tr.querySelector('.batch-pins-btn').addEventListener('click', () => {
-                openBatchModalForClass(c.classCode);
+            tr.querySelector('.batch-pins-btn').addEventListener('click', async () => {
+                await openBatchModalForClass(c.classCode);
             });
 
             // 複製該班學生 PIN 碼清冊
-            tr.querySelector('.copy-pins-btn').addEventListener('click', () => {
-                copyClassPins(c);
+            tr.querySelector('.copy-pins-btn').addEventListener('click', async () => {
+                await copyClassPins(c);
             });
 
             // 切換唯讀
@@ -1045,9 +1045,21 @@ export async function renderAccountsDashboard(container, currentSchool) {
     const btnGotoBatchFromView = container.querySelector('#btn-goto-batch-from-view');
     const btnCopyViewPins = container.querySelector('#btn-copy-view-pins');
 
-    function openViewPinsModal(c) {
+    async function openViewPinsModal(c) {
         currentViewingClass = c;
         triggerHaptic('light');
+
+        // 即時向雲端拉取該班最新 PIN 碼（保證教師端自訂/修改即時同步至學校端）
+        try {
+            const livePins = await fetchLatestClassPins(c.classCode);
+            if (livePins && Object.keys(livePins).length > 0) {
+                c.studentPins = { ...livePins };
+                const idx = allClassList.findIndex(item => item.classCode === c.classCode);
+                if (idx >= 0) allClassList[idx].studentPins = { ...livePins };
+                localStorage.setItem(localKey, JSON.stringify(allClassList));
+            }
+        } catch(e) {}
+
         viewPinsTitle.textContent = `【${c.className} (${c.classCode})】學生 PIN 碼清冊`;
         const missing = Array.isArray(c.missingSeats) ? c.missingSeats : [];
         const total = c.studentCount || 30;
@@ -1095,20 +1107,30 @@ export async function renderAccountsDashboard(container, currentSchool) {
 
     viewPinsClose.addEventListener('click', () => viewPinsModal.classList.add('hidden'));
 
-    btnGotoBatchFromView.addEventListener('click', () => {
+    btnGotoBatchFromView.addEventListener('click', async () => {
         if (!currentViewingClass) return;
         viewPinsModal.classList.add('hidden');
-        openBatchModalForClass(currentViewingClass.classCode);
+        await openBatchModalForClass(currentViewingClass.classCode);
     });
 
-    btnCopyViewPins.addEventListener('click', () => {
+    btnCopyViewPins.addEventListener('click', async () => {
         if (currentViewingClass) {
-            copyClassPins(currentViewingClass);
+            await copyClassPins(currentViewingClass);
         }
     });
 
-    function copyClassPins(c) {
+    async function copyClassPins(c) {
         triggerHaptic('light');
+        try {
+            const livePins = await fetchLatestClassPins(c.classCode);
+            if (livePins && Object.keys(livePins).length > 0) {
+                c.studentPins = { ...livePins };
+                const idx = allClassList.findIndex(item => item.classCode === c.classCode);
+                if (idx >= 0) allClassList[idx].studentPins = { ...livePins };
+                localStorage.setItem(localKey, JSON.stringify(allClassList));
+            }
+        } catch(e) {}
+
         const missing = Array.isArray(c.missingSeats) ? c.missingSeats : [];
         const total = c.studentCount || 30;
         const pins = c.studentPins || {};
@@ -1134,10 +1156,18 @@ ${lines.join('\n')}
         showToast(`已複製【${c.className}】學生 PIN 碼清冊至剪貼簿！`, 'success');
     }
 
-    function openBatchModalForClass(classCode) {
+    async function openBatchModalForClass(classCode) {
         triggerHaptic('light');
         updateStudentsClassSelect(allClassList);
         studentsClassSelect.value = classCode;
+        try {
+            const livePins = await fetchLatestClassPins(classCode);
+            const targetClass = allClassList.find(c => c.classCode === classCode);
+            if (targetClass && livePins && Object.keys(livePins).length > 0) {
+                targetClass.studentPins = { ...livePins };
+                localStorage.setItem(localKey, JSON.stringify(allClassList));
+            }
+        } catch(e) {}
         initEditorForClass(classCode);
         switchPinMode('manual');
         studentsModal.classList.remove('hidden');
@@ -1918,6 +1948,23 @@ ${lines.join('\n')}
             }
         };
         reader.readAsText(file);
+    });
+
+    // 跨頁籤雙向即時同步監聽（教師端更新 PIN 碼時，學校端即刻同步展示）
+    window.addEventListener('storage', async (e) => {
+        if (e.key === 'school_pins_sync_event' && e.newValue) {
+            try {
+                const data = JSON.parse(e.newValue);
+                const target = allClassList.find(c => c.classCode === data.classCode);
+                if (target && data.studentPins) {
+                    target.studentPins = { ...data.studentPins };
+                    renderTable(allClassList);
+                    if (currentViewingClass && currentViewingClass.classCode === data.classCode) {
+                        await openViewPinsModal(target);
+                    }
+                }
+            } catch(err) {}
+        }
     });
 
     await loadClasses();

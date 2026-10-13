@@ -228,12 +228,25 @@ export async function saveSchoolClass(classData) {
                 isReadOnly: Boolean(classData.isReadOnly),
                 studentPins: classData.studentPins || {},
                 studentAccounts: classData.studentAccounts || [],
-                updatedAt: new Date().toISOString()
             }, { merge: true });
         }
     } catch (e) {
         console.warn("同步至 boundAccounts 提示:", e);
     }
+
+    // 發送跨頁籤雙向即時同步事件，通知教師端即刻更新 PIN 碼
+    try {
+        if (classData.studentPins && Object.keys(classData.studentPins).length > 0) {
+            localStorage.setItem('school_pins_sync_event', JSON.stringify({
+                classCode: classData.classCode,
+                studentPins: classData.studentPins,
+                timestamp: Date.now()
+            }));
+            window.dispatchEvent(new CustomEvent('class_pins_updated', {
+                detail: { classCode: classData.classCode, studentPins: classData.studentPins }
+            }));
+        }
+    } catch (e) {}
 
     return payload;
 }
@@ -254,6 +267,46 @@ export async function deleteSchoolClass(schoolId, classCode) {
         console.warn("刪除雲端班級提示:", e);
     }
 }
+
+/**
+ * 即時自雲端拉取特定班級之最新學生 PIN 碼（保證教師端自訂/修改即時同步至學校端）
+ */
+export async function fetchLatestClassPins(classCode) {
+    if (!classCode) return null;
+    const cleanCode = String(classCode).trim();
+    
+    // 1. 優先查專屬學生 PIN 碼通道 userProfiles/sch_pins_{classCode}
+    try {
+        const pinDocRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', `sch_pins_${cleanCode}`);
+        const snap = await getDoc(pinDocRef);
+        if (snap.exists() && snap.data()?.studentPins && Object.keys(snap.data().studentPins).length > 0) {
+            return snap.data().studentPins;
+        }
+    } catch(e) {}
+
+    // 2. 查 schoolClasses/{classCode}
+    try {
+        const scRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'schoolClasses', cleanCode);
+        const snap = await getDoc(scRef);
+        if (snap.exists() && snap.data()?.studentPins && Object.keys(snap.data().studentPins).length > 0) {
+            return snap.data().studentPins;
+        }
+    } catch(e) {}
+
+    // 3. 查 parentClasses/SHS_{classCode} 與 parentClasses/{classCode}
+    try {
+        for (const p of [`SHS_${cleanCode}`, cleanCode]) {
+            const pRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'parentClasses', p);
+            const snap = await getDoc(pRef);
+            if (snap.exists() && snap.data()?.studentPins && Object.keys(snap.data().studentPins).length > 0) {
+                return snap.data().studentPins;
+            }
+        }
+    } catch(e) {}
+
+    return null;
+}
+
 
 // ==========================================
 // 晨間出缺席看板 (Morning Attendance)
