@@ -48,7 +48,7 @@
             </div>
 
             <!-- 已登入之模導航選單 (Desktop) -->
-            <nav id="header-nav-tabs" class="hidden md:flex max-md:!hidden items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60">
+            <nav id="header-nav-tabs" style="display: none !important;" class="items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60">
                 <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60 active-tab bg-white text-indigo-700 shadow-xs" data-tab="attendance">
                     <i class="fa-solid fa-chart-pie mr-1.5 text-emerald-600"></i>晨間出缺席
                 </button>
@@ -97,7 +97,7 @@
         </div>
 
         <!-- 行動端導航列 (Mobile Horizontal Tab Bar) -->
-        <nav id="mobile-nav-tabs" class="hidden max-md:flex md:!hidden items-center justify-around px-2 py-1.5 border-t border-slate-100 bg-white text-[11px] font-bold overflow-x-auto">
+        <nav id="mobile-nav-tabs" style="display: none !important;" class="items-center justify-around px-2 py-1.5 border-t border-slate-100 bg-white text-[11px] font-bold overflow-x-auto">
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-indigo-600 font-black whitespace-nowrap" data-tab="attendance">晨間出缺席</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="inspection">行政核章</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="broadcast">全校廣播</button>
@@ -113,106 +113,58 @@
         <!-- ============================================================== -->
         <!-- 1. 未登入視圖 (Login View)                                    -->
         <!-- ============================================================== -->
-        <div id="login-view" class="max-w-4xl mx-auto py-8 sm:py-12 space-y-8">
+        <div id="login-view" class="max-w-2xl mx-auto py-8 sm:py-12 space-y-8">
             <div class="text-center space-y-3">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-100 text-sky-800 text-xs font-black shadow-2xs">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>校園智慧行政專用中樞</span>
                 </div>
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-                    學校管理與系統行政認證中心
+                    學校行政管理認證中心
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 max-w-2xl mx-auto font-medium">
-                    專為學校教務處、學務處行政人員與最高系統管理員設計。支援 08:00 晨間出缺席大看板、線上行政抽查核章、全校廣播與全校班級帳密統一派發。
+                <p class="text-sm sm:text-base text-slate-500 max-w-xl mx-auto font-medium">
+                    專為學校教務處與學務處行政人員設計。支援 08:00 晨間出缺席大看板、線上行政抽查核章、全校廣播與全校班級帳密統一派發。
                 </p>
             </div>
 
-            <!-- 兩大登入管道卡片 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- 管道 A: 系統管理員 (帳密或 Google 授權登入) -->
-                <div class="bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-7 sm:p-8 shadow-xl shadow-purple-950/20 flex flex-col justify-between space-y-6 relative overflow-hidden">
-                    <div class="space-y-4 relative z-10">
-                        <div class="w-12 h-12 rounded-2xl bg-white/10 text-purple-300 flex items-center justify-center text-2xl border border-white/15">
-                            <i class="fa-solid fa-crown"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">系統最高權限</span>
-                            <h2 class="text-2xl font-black tracking-tight text-white mt-1">系統管理員 (System Admin)</h2>
-                            <p class="text-xs text-purple-200/80 mt-2 font-medium leading-relaxed">
-                                由系統管理員專屬管理。負責派發各校管理帳號、多校租戶授權與系統設定。
-                            </p>
-                        </div>
-
-                        <!-- 系統管理員帳密登入表單 -->
-                        <form id="super-login-form" class="space-y-3 pt-1">
-                            <div>
-                                <label class="block text-xs font-bold text-purple-200 mb-1">系統管理員帳號</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-300 text-xs"></i>
-                                    <input type="text" id="super-login-user" required placeholder="請輸入管理員帳號" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-white/20 text-sm font-bold bg-white/10 text-white placeholder:text-purple-300/60 focus:bg-white/20 outline-none">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-purple-200 mb-1">登入密碼</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-300 text-xs"></i>
-                                    <input type="password" id="super-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-white/20 text-sm font-bold bg-white/10 text-white placeholder:text-purple-300/60 focus:bg-white/20 outline-none">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-sm transition-all shadow-md shadow-purple-900/30 flex items-center justify-center gap-2 cursor-pointer mt-1">
-                                <i class="fa-solid fa-right-to-bracket"></i>
-                                <span>登入系統管理員中樞</span>
-                            </button>
-                        </form>
-                    </div>
-
-                    <div class="relative z-10 pt-1 border-t border-white/15">
-                        <button id="btn-google-login" type="button" class="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 flex items-center justify-center gap-2.5 cursor-pointer">
-                            <i class="fa-brands fa-google text-rose-400"></i>
-                            <span>或使用 Google 授權帳號登入</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 管道 B: 學校管理端 (帳密登入) -->
-                <div class="bg-white rounded-3xl p-7 sm:p-8 border border-slate-200/80 shadow-xl shadow-slate-200/40 flex flex-col justify-between space-y-6">
-                    <div class="space-y-4">
-                        <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl">
+            <!-- 單一學校管理端登入卡片 (置中大氣排版) -->
+            <div class="max-w-md mx-auto bg-white rounded-3xl p-7 sm:p-9 border border-slate-200/90 shadow-xl shadow-slate-200/50 space-y-6">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl shadow-xs">
                             <i class="fa-solid fa-school"></i>
                         </div>
                         <div>
                             <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">學校處室專用</span>
-                            <h2 class="text-2xl font-black tracking-tight text-slate-900 mt-1">學校管理端 (School Admin)</h2>
-                            <p class="text-xs text-slate-500 mt-2 font-medium leading-relaxed">
-                                使用系統管理員核發之管理帳號登入，管理該校晨間出缺席、行政抽查核章、全校廣播與統一班級帳密派發。
-                            </p>
+                            <h2 class="text-2xl font-black tracking-tight text-slate-900">學校管理端登入</h2>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                        請輸入系統管理員核發之學校管理員帳號與密碼，安全存取該校專屬行政管理中心。
+                    </p>
+
+                    <form id="school-login-form" class="space-y-4 pt-1">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">學校管理員帳號</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="school-login-user" required placeholder="請輸入學校管理員帳號" class="w-full pl-9 pr-3.5 py-3 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all">
+                            </div>
                         </div>
 
-                        <form id="school-login-form" class="space-y-3.5">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">學校管理員帳號</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input type="text" id="school-login-user" required placeholder="請輸入學校管理員帳號" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white outline-none">
-                                </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">登入密碼</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="password" id="school-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-3 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all">
                             </div>
+                        </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">登入密碼</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                    <input type="password" id="school-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white outline-none">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-black text-sm transition-all shadow-md shadow-sky-600/20 flex items-center justify-center gap-2 cursor-pointer mt-2">
-                                <i class="fa-solid fa-right-to-bracket"></i>
-                                <span>登入學校管理中樞</span>
-                            </button>
-                        </form>
-                    </div>
+                        <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-sm transition-all shadow-md shadow-sky-600/25 hover:shadow-lg hover:shadow-sky-600/35 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-98">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            <span>登入學校管理中樞</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

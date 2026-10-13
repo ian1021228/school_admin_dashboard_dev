@@ -1,4 +1,3 @@
-// 身分認證與權限控制模組 (RBAC)
 import { 
     auth, 
     googleProvider, 
@@ -6,9 +5,12 @@ import {
     signOut, 
     onAuthStateChanged,
     getSchoolTenants,
-    saveSchoolTenant
+    saveSchoolTenant,
+    db,
+    doc,
+    getDoc
 } from './firebase.js';
-import { SUPER_ADMIN_EMAIL, DEFAULT_SCHOOL } from './constants.js';
+import { SUPER_ADMIN_EMAIL, DEFAULT_SCHOOL, globalAppId } from './constants.js';
 import { showToast, triggerHaptic } from './utils.js';
 
 export const authState = {
@@ -168,12 +170,57 @@ export async function loginWithSchoolCredentials(username, password) {
         return true;
     }
 
-    // 比對各校註冊的租戶帳號
-    const schools = await getSchoolTenants();
-    const matched = schools.find(s => 
-        (s.adminUsername && s.adminUsername.toLowerCase() === cleanUser) &&
-        (s.adminPassword === cleanPass)
-    );
+    // 比對各校註冊的租戶帳號（支援 adminAccount 與 adminUsername）
+    let schools = await getSchoolTenants();
+    let matched = schools.find(s => {
+        const acc = String(s.adminAccount || s.adminUsername || '').trim().toLowerCase();
+        const pass = String(s.adminPassword || '').trim();
+        return acc === cleanUser && pass === cleanPass;
+    });
+
+    // 若本地快取未匹配，強制自雲端 Firestore 載入最新租戶清單進行即時比對（防止跨裝置同步延遲）
+    if (!matched) {
+        try {
+            const docRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'userProfiles', 'sys_school_tenants');
+            const snap = await getDoc(docRef);
+            if (snap.exists() && Array.isArray(snap.data()?.list)) {
+                schools = snap.data().list;
+                localStorage.setItem('school_tenants_cache', JSON.stringify(schools));
+                matched = schools.find(s => {
+                    const acc = String(s.adminAccount || s.adminUsername || '').trim().toLowerCase();
+                    const pass = String(s.adminPassword || '').trim();
+                    return acc === cleanUser && pass === cleanPass;
+                });
+            }
+        } catch (err) {
+            console.warn("即時重新查詢雲端租戶提示:", err);
+        }
+    }
+
+    // 若仍然未匹配，檢查 boundAccounts 是否有指派
+    if (!matched) {
+        try {
+            const boundRef = doc(db, 'artifacts', globalAppId, 'public', 'data', 'boundAccounts', cleanUser);
+            const boundSnap = await getDoc(boundRef);
+            if (boundSnap.exists()) {
+                const bData = boundSnap.data();
+                if (bData.password === cleanPass && bData.schoolId) {
+                    const targetSchool = schools.find(s => s.id === bData.schoolId) || {
+                        id: bData.schoolId,
+                        name: bData.schoolName || '校園管理處',
+                        code: bData.schoolId.toUpperCase()
+                    };
+                    matched = {
+                        ...targetSchool,
+                        adminAccount: cleanUser,
+                        adminPassword: cleanPass
+                    };
+                }
+            }
+        } catch (err) {
+            console.warn("即時查詢 boundAccounts 提示:", err);
+        }
+    }
 
     if (matched) {
         if (matched.status === 'suspended') {
@@ -181,7 +228,8 @@ export async function loginWithSchoolCredentials(username, password) {
             return false;
         }
 
-        authState.currentUser = { username: matched.adminUsername, displayName: `${matched.name} 管理處` };
+        const validUsername = matched.adminAccount || matched.adminUsername || cleanUser;
+        authState.currentUser = { username: validUsername, displayName: `${matched.name} 管理處` };
         authState.role = 'school_admin';
         authState.currentSchool = matched;
         authState.isImpersonating = false;

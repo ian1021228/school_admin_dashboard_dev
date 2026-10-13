@@ -26,7 +26,10 @@ export {
     onAuthStateChanged,
     signInWithPopup,
     signOut,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    doc,
+    getDoc,
+    setDoc
 };
 
 // Google 登入 Provider

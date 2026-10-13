@@ -43,14 +43,30 @@ initAuthListener((state) => {
     updateUIForAuthState(state);
 });
 
+// 導航欄顯示狀態同步
+function syncNavVisibility() {
+    if (!authState.currentUser) {
+        headerNavTabs.style.setProperty('display', 'none', 'important');
+        mobileNavTabs.style.setProperty('display', 'none', 'important');
+        return;
+    }
+    if (window.innerWidth >= 768) {
+        headerNavTabs.style.setProperty('display', 'flex');
+        mobileNavTabs.style.setProperty('display', 'none', 'important');
+    } else {
+        headerNavTabs.style.setProperty('display', 'none', 'important');
+        mobileNavTabs.style.setProperty('display', 'flex');
+    }
+}
+window.addEventListener('resize', syncNavVisibility);
+
 function updateUIForAuthState(state) {
     if (!state.currentUser) {
-        // 未登入狀態
+        // 未登入狀態：嚴格保證任何導航列與功能區塊不外洩
         loginView.classList.remove('hidden');
         authenticatedView.classList.add('hidden');
         superAdminView.classList.add('hidden');
-        headerNavTabs.classList.add('hidden');
-        mobileNavTabs.classList.add('hidden');
+        syncNavVisibility();
         headerLogoutBtn.classList.add('hidden');
         headerRoleBadge.classList.add('hidden');
         impersonationBar.classList.add('hidden');
@@ -68,8 +84,8 @@ function updateUIForAuthState(state) {
         headerSchoolName.textContent = '系統管理中樞 (System Admin)';
         headerRoleBadge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i>系統管理員';
         headerRoleBadge.className = 'text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200';
-        navSuperAdminBtn.classList.remove('hidden');
-        mobileSuperTabBtn.classList.remove('hidden');
+        navSuperAdminBtn?.classList.remove('hidden');
+        mobileSuperTabBtn?.classList.remove('hidden');
         impersonationBar.classList.add('hidden');
     } else {
         // 學校管理端檢視 (或系統管理員切換檢視)
@@ -84,17 +100,16 @@ function updateUIForAuthState(state) {
         if (state.isImpersonating) {
             impersonationBar.classList.remove('hidden');
             impersonationBar.classList.add('flex');
-            navSuperAdminBtn.classList.remove('hidden');
-            mobileSuperTabBtn.classList.remove('hidden');
+            navSuperAdminBtn?.classList.remove('hidden');
+            mobileSuperTabBtn?.classList.remove('hidden');
         } else {
             impersonationBar.classList.add('hidden');
-            navSuperAdminBtn.classList.add('hidden');
-            mobileSuperTabBtn.classList.add('hidden');
+            navSuperAdminBtn?.classList.add('hidden');
+            mobileSuperTabBtn?.classList.add('hidden');
         }
     }
 
-    headerNavTabs.classList.remove('hidden');
-    mobileNavTabs.classList.remove('hidden');
+    syncNavVisibility();
 
     // 切換預設分頁
     switchTab(currentTab);
@@ -159,9 +174,11 @@ document.querySelectorAll('.nav-tab-btn, .mobile-tab-btn').forEach(btn => {
 });
 
 // Google 登入按鈕
-btnGoogleLogin.addEventListener('click', async () => {
-    await loginWithGoogle();
-});
+if (btnGoogleLogin) {
+    btnGoogleLogin.addEventListener('click', async () => {
+        await loginWithGoogle();
+    });
+}
 
 // 系統管理員登入表單
 const superLoginForm = document.getElementById('super-login-form');
