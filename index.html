@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Noto Sans TC', 'sans-serif'],
+                        sans: ['Inter', 'Noto Sans TC', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
                     }
                 }
             }
@@ -28,68 +28,68 @@
     <!-- 自訂樣式 -->
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen">
+<body class="bg-slate-50 text-slate-900 antialiased flex flex-col min-h-screen">
 
     <!-- 頂部全域導航列 (Global Navigation Bar) -->
-    <header id="global-header" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3">
+    <header id="global-header" class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
             <!-- 品牌標誌與學校名稱 -->
             <div class="flex items-center gap-3 shrink-0">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-md shadow-sky-600/20">
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center text-sm shadow-xs">
                     <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span id="header-school-name" class="font-black text-slate-900 text-base sm:text-lg tracking-tight">學校行政管理中心</span>
-                        <span id="header-role-badge" class="hidden text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">學校端</span>
+                        <span id="header-school-name" class="font-bold text-slate-900 text-sm sm:text-base tracking-tight">學校行政管理中心</span>
+                        <span id="header-role-badge" class="hidden text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">學校端</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-medium">四層級權限架構・高強度資訊防護中樞</p>
+                    <p class="text-[11px] text-slate-500 font-medium">四層級權限架構 · 行政管理中樞</p>
                 </div>
             </div>
 
             <!-- 已登入之模導航選單 (Desktop) -->
-            <nav id="header-nav-tabs" style="display: none !important;" class="items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60">
-                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60 active-tab bg-white text-indigo-700 shadow-xs" data-tab="attendance">
+            <nav id="header-nav-tabs" style="display: none !important;" class="items-center gap-1 p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
+                <button class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60 active-tab bg-white text-indigo-700 shadow-2xs" data-tab="attendance">
                     <i class="fa-solid fa-chart-pie mr-1.5 text-emerald-600"></i>晨間出缺席
                 </button>
-                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="inspection">
+                <button class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="inspection">
                     <i class="fa-solid fa-stamp mr-1.5 text-rose-600"></i>行政抽查核章
                 </button>
-                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="broadcast">
+                <button class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="broadcast">
                     <i class="fa-solid fa-tower-broadcast mr-1.5 text-amber-600"></i>全校廣播
                 </button>
-                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="accounts">
+                <button class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="accounts">
                     <i class="fa-solid fa-users-gear mr-1.5 text-sky-600"></i>班級與帳密派發
                 </button>
-                <button class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="contact_book">
+                <button class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60" data-tab="contact_book">
                     <i class="fa-solid fa-book-open-reader mr-1.5 text-teal-600"></i>各班聯絡簿與點收
                 </button>
-                <button id="nav-super-admin-btn" class="nav-tab-btn hidden px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-purple-700 hover:bg-purple-100/80 bg-purple-50 border border-purple-200" data-tab="super_admin">
-                    <i class="fa-solid fa-crown mr-1.5 text-purple-600"></i>系統管理員
+                <button id="nav-super-admin-btn" class="nav-tab-btn hidden px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-700 hover:bg-slate-200/70 bg-slate-50 border border-slate-200" data-tab="super_admin">
+                    <i class="fa-solid fa-crown mr-1.5 text-amber-600"></i>系統管理員
                 </button>
             </nav>
 
             <!-- 右側使用者狀態與操作 -->
             <div class="flex items-center gap-2 shrink-0">
                 <!-- 管理模式提示與退出按鈕 -->
-                <div id="impersonation-bar" class="hidden items-center gap-2 bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-2xl text-xs font-bold text-purple-900">
-                    <i class="fa-solid fa-eye text-purple-600"></i>
+                <div id="impersonation-bar" class="hidden items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-800">
+                    <i class="fa-solid fa-eye text-indigo-600"></i>
                     <span class="hidden sm:inline">學校管理模式中</span>
-                    <button id="exit-impersonation-btn" class="px-2 py-0.5 rounded-lg bg-purple-200 hover:bg-purple-300 text-purple-950 font-black text-[11px] cursor-pointer">返回系統管理員</button>
+                    <button id="exit-impersonation-btn" class="px-2 py-0.5 rounded-md bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 font-semibold text-[11px] cursor-pointer">返回系統管理員</button>
                 </div>
 
                 <!-- 各端切換快捷 -->
-                <a href="https://ian1021228.github.io/homework_checker3.0_dev/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all" title="直達教師端 (DEV)">
-                    <i class="fa-solid fa-chalkboard-user"></i>
+                <a href="https://ian1021228.github.io/homework_checker3.0_dev/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/90 px-3 py-1.5 rounded-lg transition-all" title="直達教師端 (DEV)">
+                    <i class="fa-solid fa-chalkboard-user text-indigo-600"></i>
                     <span>教師端</span>
                 </a>
-                <a href="https://ian1021228.github.io/parent_dashboard_dev/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1.5 text-xs font-bold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-all" title="直達家長端 (DEV)">
-                    <i class="fa-solid fa-house-chimney-user"></i>
+                <a href="https://ian1021228.github.io/parent_dashboard_dev/" target="_blank" rel="noopener noreferrer" class="hidden lg:flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/90 px-3 py-1.5 rounded-lg transition-all" title="直達家長端 (DEV)">
+                    <i class="fa-solid fa-house-chimney-user text-emerald-600"></i>
                     <span>家長端</span>
                 </a>
 
                 <!-- 登出按鈕 -->
-                <button id="header-logout-btn" class="hidden px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                <button id="header-logout-btn" class="hidden px-3 py-1.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200/90 hover:border-rose-200 text-slate-600 hover:text-rose-600 text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                     <span class="hidden sm:inline">登出</span>
                 </button>
@@ -97,13 +97,13 @@
         </div>
 
         <!-- 行動端導航列 (Mobile Horizontal Tab Bar) -->
-        <nav id="mobile-nav-tabs" style="display: none !important;" class="items-center justify-around px-2 py-1.5 border-t border-slate-100 bg-white text-[11px] font-bold overflow-x-auto">
-            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-indigo-600 font-black whitespace-nowrap" data-tab="attendance">晨間出缺席</button>
+        <nav id="mobile-nav-tabs" style="display: none !important;" class="items-center justify-around px-2 py-1.5 border-t border-slate-100 bg-white text-[11px] font-semibold overflow-x-auto">
+            <button class="mobile-tab-btn flex-1 py-1.5 text-center text-indigo-600 font-bold whitespace-nowrap" data-tab="attendance">晨間出缺席</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="inspection">行政核章</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="broadcast">全校廣播</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="accounts">班級帳密</button>
             <button class="mobile-tab-btn flex-1 py-1.5 text-center text-slate-500 whitespace-nowrap" data-tab="contact_book">聯絡簿點收</button>
-            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-purple-600 whitespace-nowrap" data-tab="super_admin">系統管理員</button>
+            <button id="mobile-super-tab-btn" class="mobile-tab-btn hidden flex-1 py-1.5 text-center text-slate-700 whitespace-nowrap" data-tab="super_admin">系統管理員</button>
         </nav>
     </header>
 
@@ -115,52 +115,52 @@
         <!-- ============================================================== -->
         <div id="login-view" class="max-w-2xl mx-auto py-8 sm:py-12 space-y-8">
             <div class="text-center space-y-3">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-100 text-sky-800 text-xs font-black shadow-2xs">
-                    <i class="fa-solid fa-shield-halved"></i>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-2xs">
+                    <i class="fa-solid fa-shield-halved text-indigo-600"></i>
                     <span>校園智慧行政專用中樞</span>
                 </div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
+                <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
                     學校行政管理認證中心
                 </h1>
-                <p class="text-sm sm:text-base text-slate-500 max-w-xl mx-auto font-medium">
+                <p class="text-sm sm:text-base text-slate-500 max-w-xl mx-auto font-normal leading-relaxed">
                     專為學校教務處與學務處行政人員設計。支援 08:00 晨間出缺席大看板、線上行政抽查核章、全校廣播與全校班級帳密統一派發。
                 </p>
             </div>
 
-            <!-- 單一學校管理端登入卡片 (置中大氣排版) -->
-            <div class="max-w-md mx-auto bg-white rounded-3xl p-7 sm:p-9 border border-slate-200/90 shadow-xl shadow-slate-200/50 space-y-6">
+            <!-- 單一學校管理端登入卡片 -->
+            <div class="max-w-md mx-auto bg-white rounded-2xl p-7 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
                 <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl shadow-xs">
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center text-lg">
                             <i class="fa-solid fa-school"></i>
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">學校處室專用</span>
-                            <h2 class="text-2xl font-black tracking-tight text-slate-900">學校管理端登入</h2>
+                            <span class="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider">學校處室專用</span>
+                            <h2 class="text-xl font-bold tracking-tight text-slate-900">學校管理端登入</h2>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-500 font-medium leading-relaxed">
+                    <p class="text-xs text-slate-500 leading-relaxed">
                         請輸入系統管理員核發之學校管理員帳號與密碼，安全存取該校專屬行政管理中心。
                     </p>
 
                     <form id="school-login-form" class="space-y-4 pt-1">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">學校管理員帳號</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">學校管理員帳號</label>
                             <div class="relative">
                                 <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                <input type="text" id="school-login-user" required placeholder="請輸入學校管理員帳號" class="w-full pl-9 pr-3.5 py-3 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all">
+                                <input type="text" id="school-login-user" required placeholder="請輸入學校管理員帳號" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 outline-none transition-all">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">登入密碼</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">登入密碼</label>
                             <div class="relative">
                                 <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                                <input type="password" id="school-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-3 rounded-xl border border-slate-200 text-sm font-bold bg-slate-50 focus:bg-white focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none transition-all">
+                                <input type="password" id="school-login-pass" required placeholder="請輸入密碼" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 outline-none transition-all">
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-black text-sm transition-all shadow-md shadow-sky-600/25 hover:shadow-lg hover:shadow-sky-600/35 flex items-center justify-center gap-2 cursor-pointer mt-2 transform active:scale-98">
+                        <button type="submit" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-2">
                             <i class="fa-solid fa-right-to-bracket"></i>
                             <span>登入學校管理中樞</span>
                         </button>

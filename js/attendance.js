@@ -82,14 +82,18 @@ export async function renderAttendanceDashboard(container, currentSchool) {
             </div>
 
             <!-- 各班晨間通報進度表格 -->
-            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="font-black text-base sm:text-lg text-slate-800 flex items-center gap-2">
+                    <h3 class="font-bold text-base sm:text-lg text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-list-check text-indigo-600"></i>
                         <span>各班級早自習出席通報清單</span>
                     </h3>
-                    <div class="flex items-center gap-2">
-                        <button id="att-nudge-all-btn" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="att-filter-unreported-btn" type="button" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer" data-active="false">
+                            <i class="fa-solid fa-filter text-slate-400"></i>
+                            <span id="att-filter-unreported-text">僅顯示未通報 / 異常班級</span>
+                        </button>
+                        <button id="att-nudge-all-btn" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-bell"></i>
                             <span>一鍵向未通報班級發送催報提醒</span>
                         </button>
@@ -99,7 +103,7 @@ export async function renderAttendanceDashboard(container, currentSchool) {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/80 text-slate-500 font-bold text-xs uppercase border-b border-slate-100">
+                            <tr class="bg-slate-50/80 text-slate-500 font-semibold text-xs uppercase border-b border-slate-100">
                                 <th class="py-3.5 px-4">班級代碼</th>
                                 <th class="py-3.5 px-4">班級名稱</th>
                                 <th class="py-3.5 px-4 text-center">應到人數</th>
@@ -124,9 +128,9 @@ export async function renderAttendanceDashboard(container, currentSchool) {
 
         <!-- 班級出缺席明細抽查彈窗 -->
         <div id="att-detail-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-200 space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h4 id="att-modal-title" class="font-black text-lg text-slate-800">班級出缺席抽查明細</h4>
+                    <h4 id="att-modal-title" class="font-bold text-lg text-slate-900">班級出缺席抽查明細</h4>
                     <button id="att-modal-close" class="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
@@ -143,8 +147,51 @@ export async function renderAttendanceDashboard(container, currentSchool) {
     const refreshBtn = container.querySelector('#att-refresh-btn');
     const exportBtn = container.querySelector('#att-export-btn');
     const nudgeAllBtn = container.querySelector('#att-nudge-all-btn');
+    const filterUnreportedBtn = container.querySelector('#att-filter-unreported-btn');
+    const filterUnreportedText = container.querySelector('#att-filter-unreported-text');
     const modal = container.querySelector('#att-detail-modal');
     const modalClose = container.querySelector('#att-modal-close');
+    let onlyShowUnreportedOrAbnormal = false;
+
+    function applyTableFilter() {
+        const tableBody = container.querySelector('#att-table-body');
+        if (!tableBody) return;
+        const rows = Array.from(tableBody.querySelectorAll('tr[data-class-row="true"]'));
+        let visibleCount = 0;
+        rows.forEach(tr => {
+            const isAbnormal = tr.getAttribute('data-abnormal') === 'true';
+            if (onlyShowUnreportedOrAbnormal && !isAbnormal) {
+                tr.classList.add('hidden');
+            } else {
+                tr.classList.remove('hidden');
+                visibleCount++;
+            }
+        });
+        const emptyFilterRow = tableBody.querySelector('#att-empty-filter-row');
+        if (emptyFilterRow) emptyFilterRow.remove();
+        if (onlyShowUnreportedOrAbnormal && visibleCount === 0 && rows.length > 0) {
+            const emptyTr = document.createElement('tr');
+            emptyTr.id = 'att-empty-filter-row';
+            emptyTr.innerHTML = `<td colspan="8" class="text-center py-8 text-emerald-600 font-semibold text-xs"><i class="fa-solid fa-circle-check mr-1.5"></i>全校各班皆已完成通報且無缺席或遲到異常！</td>`;
+            tableBody.appendChild(emptyTr);
+        }
+    }
+
+    if (filterUnreportedBtn) {
+        filterUnreportedBtn.addEventListener('click', () => {
+            triggerHaptic('light');
+            onlyShowUnreportedOrAbnormal = !onlyShowUnreportedOrAbnormal;
+            filterUnreportedBtn.setAttribute('data-active', String(onlyShowUnreportedOrAbnormal));
+            if (onlyShowUnreportedOrAbnormal) {
+                filterUnreportedBtn.className = 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white border border-indigo-600 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs';
+                if (filterUnreportedText) filterUnreportedText.textContent = '顯示全部班級';
+            } else {
+                filterUnreportedBtn.className = 'px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer';
+                if (filterUnreportedText) filterUnreportedText.textContent = '僅顯示未通報 / 異常班級';
+            }
+            applyTableFilter();
+        });
+    }
 
     modalClose.addEventListener('click', () => modal.classList.add('hidden'));
 
@@ -229,29 +276,31 @@ export async function renderAttendanceDashboard(container, currentSchool) {
 
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-slate-100';
+            tr.setAttribute('data-class-row', 'true');
+            tr.setAttribute('data-abnormal', String(!isReported || absentCount > 0 || tardyCount > 0));
             tr.innerHTML = `
                 <td class="py-3.5 px-4 font-mono font-bold text-slate-800">${cls.classCode}</td>
-                <td class="py-3.5 px-4 font-black text-slate-900">${cls.className}</td>
+                <td class="py-3.5 px-4 font-bold text-slate-900">${cls.className}</td>
                 <td class="py-3.5 px-4 text-center font-bold text-slate-600">${expectedCount}</td>
                 <td class="py-3.5 px-4 text-center font-bold ${isReported ? 'text-emerald-600' : 'text-slate-400'}">${isReported ? presentCount : '-'}</td>
                 <td class="py-3.5 px-4 text-center font-bold ${absentCount > 0 ? 'text-rose-600' : 'text-slate-400'}">
-                    ${isReported ? (absentCount > 0 ? `<span class="bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-xs font-black">${absentCount} 人</span>` : '0') : '-'}
+                    ${isReported ? (absentCount > 0 ? `<span class="bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-xs font-bold">${absentCount} 人</span>` : '0') : '-'}
                 </td>
                 <td class="py-3.5 px-4 text-center font-bold ${tardyCount > 0 ? 'text-amber-600' : 'text-slate-400'}">
-                    ${isReported ? (tardyCount > 0 ? `<span class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-black">${tardyCount} 人</span>` : '0') : '-'}
+                    ${isReported ? (tardyCount > 0 ? `<span class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">${tardyCount} 人</span>` : '0') : '-'}
                 </td>
                 <td class="py-3.5 px-4">
                     ${isReported 
-                        ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                              <i class="fa-solid fa-circle-check text-[10px]"></i> ${reportedTime} 已通報
                            </span>`
-                        : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">
+                        : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                              <i class="fa-solid fa-clock text-[10px]"></i> 尚未通報
                            </span>`
                     }
                 </td>
                 <td class="py-3.5 px-4 text-center">
-                    <button class="att-view-detail-btn px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs font-bold transition-all cursor-pointer" data-code="${cls.classCode}">
+                    <button class="att-view-detail-btn px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200/90 hover:text-indigo-600 text-slate-600 text-xs font-semibold transition-all cursor-pointer" data-code="${cls.classCode}">
                         <i class="fa-solid fa-magnifying-glass mr-1"></i>抽查明細
                     </button>
                 </td>
@@ -283,7 +332,7 @@ export async function renderAttendanceDashboard(container, currentSchool) {
                     let listHtml = absentSeats.map(a => `
                         <li class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-black flex items-center justify-center text-xs">${a.seat} 號</span>
+                                <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">${a.seat} 號</span>
                                 <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs font-bold">${a.type}</span>
                             </div>
                             <span class="text-xs text-slate-500 font-medium">${a.note || '家長告知事由'}</span>
@@ -301,6 +350,8 @@ export async function renderAttendanceDashboard(container, currentSchool) {
 
             tableBody.appendChild(tr);
         }
+
+        applyTableFilter();
 
         // 更新 KPI
         const totalClasses = effectiveClasses.length;

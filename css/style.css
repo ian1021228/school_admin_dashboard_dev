@@ -1,14 +1,17 @@
-/* 全域樣式與字體定義 */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+/* 全域樣式與字體定義 — Swiss Editorial & Precision SaaS */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --app-font: 'Plus Jakarta Sans', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+  --app-font: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   font-family: var(--app-font);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.011em;
   background-color: #f8fafc;
-  color: #1e293b;
+  color: #0f172a;
   min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -1,7 +1,7 @@
 // 通用工具函數庫
 
 export function triggerHaptic(type = 'light') {
-    if ('vibrate' in navigator) {
+    if ('vibrate' in navigator && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) {
         try {
             if (type === 'light') navigator.vibrate(10);
             else if (type === 'medium') navigator.vibrate(25);
